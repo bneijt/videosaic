@@ -4,6 +4,7 @@ package net.logfish.videosaic;
     Based on code from
 http://groups.google.com/group/gstreamer-java/browse_thread/thread/fc0f85def933867c
 */
+import net.logfish.videosaic.Frame;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
@@ -19,20 +20,22 @@ import java.util.concurrent.BlockingQueue;
 
 public class FrameGenerator implements Runnable {
 
-        private final BlockingQueue<BufferedImage> queue;
+        private final BlockingQueue<Frame> queue;
         private final PlayBin player;
 
-        public FrameGenerator(BlockingQueue<BufferedImage> outputQueue, File inputVideoFile) {
+        public FrameGenerator(BlockingQueue<Frame> outputQueue, File inputVideoFile) {
             this.queue = outputQueue;
             String[] args = {};
             args = Gst.init("FrameGenerator", args);
             player = new PlayBin("FrameGenerator");
 
             RGBDataSink.Listener listener1 = new RGBDataSink.Listener() {
+                private long frameNumber = 0;
                 public void rgbFrame(int w, int h, IntBuffer rgbPixels) {
-                        BufferedImage frame = new BufferedImage(
+                        Frame frame = new Frame(
                             w, h,
-                            BufferedImage.TYPE_INT_ARGB);
+                            BufferedImage.TYPE_INT_ARGB,
+                            frameNumber++);
                         frame.setRGB(0, 0, w, h, rgbPixels.array(), 0, w);
                         try {
                             queue.put(frame);

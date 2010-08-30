@@ -3,7 +3,7 @@ import java.util.concurrent.{BlockingQueue,SynchronousQueue};
 import scala.collection.mutable.ArrayOps;
 import org.gstreamer.Gst;
 import java.io.File;
-import net.logfish.videosaic.FrameGenerator;
+import net.logfish.videosaic.{FrameGenerator, Frame};
 import java.awt.image.BufferedImage;
 import java.util.concurrent.TimeUnit;
 
@@ -25,13 +25,13 @@ object Application
     printf("Output: %s\nInput: %s", outputVideo.toString, inputVideos.mkString)
     //Create index of output movie
     val testFile = inputVideos.head
-    var queue: BlockingQueue[BufferedImage] = new SynchronousQueue[BufferedImage]();
+    var queue: BlockingQueue[Frame] = new SynchronousQueue[Frame]();
     val fg = new FrameGenerator(queue, testFile);
     fg.run();
-    while(fg.alive())
+    while(true)
     {
-        print(".");
-        queue.take();
+        val f: Frame = queue.take();
+        println(f.frameNumber());
     }
     //Create index of output video;s
     //Match input movie parts to output movie
