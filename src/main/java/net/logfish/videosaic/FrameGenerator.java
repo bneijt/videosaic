@@ -15,66 +15,44 @@ import org.gstreamer.Gst;
 import org.gstreamer.elements.PlayBin;
 import org.gstreamer.elements.FakeSink;
 import org.gstreamer.elements.RGBDataSink;
+import java.util.concurrent.BlockingQueue;
 
-public class FrameGenerator {
+public class FrameGenerator implements Runnable {
 
-        private BufferedImage currentImage = null;
-        private PlayBin player = null;
+        private final BlockingQueue<BufferedImage> queue;
+        private final PlayBin player;
 
-        public FrameGenerator() {
-                String[] args = {};
-                args = Gst.init("FrameGenerator", args);
-                player = new PlayBin("FrameGenerator");
+        public FrameGenerator(BlockingQueue<BufferedImage> outputQueue, File inputVideoFile) {
+            this.queue = outputQueue;
+            String[] args = {};
+            args = Gst.init("FrameGenerator", args);
+            player = new PlayBin("FrameGenerator");
 
-                RGBDataSink.Listener listener1 = new RGBDataSink.Listener() {
-                        public void rgbFrame(int w, int h, IntBuffer rgbPixels) {
-                                System.out.println("    -> Got a frame !");
-                                BufferedImage curImage = new BufferedImage(w, h,
-BufferedImage.TYPE_INT_ARGB);
-                                System.out.println("Creating image from raw pixels");
-                                curImage.setRGB(0, 0, w, h, rgbPixels.array(), 0, w);
-                                System.out.println("Setting currentImage");
-                                currentImage = curImage;
-                                System.out.println("Done");
-                                try {
-                                    ImageIO.write(curImage, "png", new File("out.png"));
-                                } catch(Exception e) {
-                                }
-
+            RGBDataSink.Listener listener1 = new RGBDataSink.Listener() {
+                public void rgbFrame(int w, int h, IntBuffer rgbPixels) {
+                        BufferedImage frame = new BufferedImage(
+                            w, h,
+                            BufferedImage.TYPE_INT_ARGB);
+                        frame.setRGB(0, 0, w, h, rgbPixels.array(), 0, w);
+                        try {
+                            queue.put(frame);
+                        } catch (java.lang.InterruptedException e){
+                            player.stop();
                         }
-                };
+                        };
+            };
 
-                RGBDataSink videoSink = new RGBDataSink("rgb", listener1);
-                player.setVideoSink(videoSink);
-                player.setAudioSink(new FakeSink("AudioFlush"));
+            RGBDataSink videoSink = new RGBDataSink("rgb", listener1);
+            player.setVideoSink(videoSink);
+            player.setAudioSink(new FakeSink("AudioFlush"));
+            player.setInputFile(inputVideoFile);
+        }
+        public void run() {
+            player.play();
         }
 
-        public FrameGenerator(File inputVideoFile) {
-                this();
-                this.setInputVideoFile(inputVideoFile);
-        }
-
-        public void setInputVideoFile(File inputVideoFile) {
-                player.setInputFile(inputVideoFile);
-        }
-
-        public BufferedImage catchFrameAt(long time, TimeUnit unit){
-
-                currentImage = null;
-
-                player.pause();
-                player.getState();
-                player.seek(time, unit);
-                player.play();
-                System.out.println("Entering while loop");
-                while(currentImage == null);
-                System.out.println("Exiting while loop");
-                player.stop();
-                System.out.println("Stoppped player");
-
-                return currentImage;
-        }
-
+/*
+    TODO: Move to test cases
         public static void main(String[] args) throws IOException {
                 long start = System.currentTimeMillis();
                 FrameGenerator catcher = new FrameGenerator();
@@ -91,4 +69,5 @@ duration+" ms.");
                 duration = (end - start);
                 System.out.println("Image Capture duration = " + duration+" ms.");
         }
+        */
 }

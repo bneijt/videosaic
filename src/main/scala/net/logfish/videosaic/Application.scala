@@ -1,5 +1,5 @@
 package net.logfish.videosaic;
-
+import java.util.concurrent.{BlockingQueue,SynchronousQueue};
 import scala.collection.mutable.ArrayOps;
 import org.gstreamer.Gst;
 import java.io.File;
@@ -25,8 +25,14 @@ object Application
     printf("Output: %s\nInput: %s", outputVideo.toString, inputVideos.mkString)
     //Create index of output movie
     val testFile = inputVideos.head
-    val fg = new FrameGenerator(testFile);
-    val image: BufferedImage = fg.catchFrameAt(10, TimeUnit.SECONDS);
+    var queue: BlockingQueue[BufferedImage] = new SynchronousQueue[BufferedImage]();
+    val fg = new FrameGenerator(queue, testFile);
+    fg.run();
+    while(fg.alive())
+    {
+        print(".");
+        queue.take();
+    }
     //Create index of output video;s
     //Match input movie parts to output movie
     //Create render definition
