@@ -28,10 +28,11 @@ object Application
     var queue: BlockingQueue[Frame] = new SynchronousQueue[Frame]();
     val fg = new FrameGenerator(queue, testFile);
     fg.run();
-    while(true)
+    var f : Frame = queue.take();
+    while(f != null)
     {
-        val f: Frame = queue.take();
         println(f.frameNumber());
+        f = queue.take();
     }
     //Create index of output video;s
     //Match input movie parts to output movie

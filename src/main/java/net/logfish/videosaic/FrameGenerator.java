@@ -40,6 +40,7 @@ public class FrameGenerator implements Runnable {
                         try {
                             queue.put(frame);
                         } catch (java.lang.InterruptedException e){
+                            queue.put(null);
                             player.stop();
                         }
                         };
