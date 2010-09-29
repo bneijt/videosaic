@@ -1,4 +1,7 @@
-
+package nl.bneijt.videosaic;
+import java.awt.image.BufferedImage;
+import java.awt.image.ImageProducer;
+import nl.bneijt.videosaic.IdentProducer;
 /** Image filter that results in dientifiers
 
 Probably should use something more generic here? Maybe Spring connector messages or Scala actors??
@@ -6,9 +9,9 @@ Probably should use something more generic here? Maybe Spring connector messages
 
 class IdentFilter implements Runnable
 {
-    private IdentityProducer idents;
+    private IdentProducer idents;
     private ImageProducer imgSource;
-    public IdentFilter(IdentityProducer p, ImageProducer img)
+    public IdentFilter(IdentProducer p, ImageProducer img)
     {
         idents = p;
         imgSource = img;
@@ -18,7 +21,7 @@ class IdentFilter implements Runnable
         while(imgSource.hasNext())
         {
             BufferedImage i = imgSource.next();
-            String identity = idents.identifyImage(i);
+            String identity = idents.identify(i);
             ///yield identity???
         }
     }

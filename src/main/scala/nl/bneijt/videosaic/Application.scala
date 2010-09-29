@@ -1,9 +1,9 @@
-package net.logfish.videosaic;
+package nl.bneijt.videosaic;
 import java.util.concurrent.{BlockingQueue,SynchronousQueue};
 import scala.collection.mutable.ArrayOps;
 import org.gstreamer.Gst;
 import java.io.File;
-import net.logfish.videosaic.{FrameGenerator, Frame};
+import nl.bneijt.videosaic.{FrameGenerator, Frame};
 import java.awt.image.BufferedImage;
 import java.util.concurrent.TimeUnit;
 

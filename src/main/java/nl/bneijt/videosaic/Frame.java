@@ -1,5 +1,5 @@
 
-package net.logfish.videosaic;
+package nl.bneijt.videosaic;
 import java.awt.image.BufferedImage;
 
 

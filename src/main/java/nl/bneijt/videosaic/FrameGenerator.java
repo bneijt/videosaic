@@ -1,10 +1,11 @@
 
-package net.logfish.videosaic;
+package nl.bneijt.videosaic;
 /*
     Based on code from
 http://groups.google.com/group/gstreamer-java/browse_thread/thread/fc0f85def933867c
 */
-import net.logfish.videosaic.Frame;
+import nl.bneijt.videosaic.Frame;
+import nl.bneijt.videosaic.BufferedImageSink;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.File;
@@ -20,15 +21,13 @@ import java.util.concurrent.BlockingQueue;
 
 public class FrameGenerator implements Runnable {
 
-        private final BlockingQueue<Frame> queue;
         private final PlayBin player;
 
         public FrameGenerator(BlockingQueue<Frame> outputQueue, File inputVideoFile) {
-            this.queue = outputQueue;
             String[] args = {};
             args = Gst.init("FrameGenerator", args);
             player = new PlayBin("FrameGenerator");
-
+            /*
             RGBDataSink.Listener listener1 = new RGBDataSink.Listener() {
                 private long frameNumber = 0;
                 public void rgbFrame(int w, int h, IntBuffer rgbPixels) {
@@ -40,12 +39,11 @@ public class FrameGenerator implements Runnable {
                         try {
                             queue.put(frame);
                         } catch (java.lang.InterruptedException e){
-                            queue.put(null);
                             player.stop();
                         }
                         };
-            };
-
+            };*/
+            RGBDataSink.Listener listener1 = new BufferedImageSink(outputQueue);
             RGBDataSink videoSink = new RGBDataSink("rgb", listener1);
             player.setVideoSink(videoSink);
             player.setAudioSink(new FakeSink("AudioFlush"));
