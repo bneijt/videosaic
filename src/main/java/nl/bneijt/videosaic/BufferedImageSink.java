@@ -18,10 +18,10 @@ import org.gstreamer.elements.FakeSink;
 import org.gstreamer.elements.RGBDataSink;
 import java.util.concurrent.BlockingQueue;
 
-class BufferedImageSink extends RGBDataSink.Listener {
+class BufferedImageSink implements RGBDataSink.Listener {
             private final BlockingQueue<Frame> queue;
 
-    public BufferedImageSink()
+    public BufferedImageSink(BlockingQueue<Frame> queue)
     {
         super();
         this.queue = queue;

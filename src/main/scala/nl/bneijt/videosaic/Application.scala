@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 object Application
 {
-  def main(args: Array[String]) = {
+    def main_OLD(args: Array[String]) = {
     //TODO Use real option parsing library (maybe paulp's optional)
     if(args.length < 2) {
         printf("Usage: %s <output> <input <input <input ...>>>", args(0));
