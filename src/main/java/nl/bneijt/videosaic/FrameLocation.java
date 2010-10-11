@@ -7,8 +7,12 @@ package nl.bneijt.videosaic;
  */
 public class FrameLocation {
 	private final String location;
+	
 	public FrameLocation(String location) {
 		this.location = location;
+	}
+	public FrameLocation(String pathname, long frameNumber) {
+		this.location = pathname + ":" + frameNumber;
 	}
 	@Override
 	public String toString() {
