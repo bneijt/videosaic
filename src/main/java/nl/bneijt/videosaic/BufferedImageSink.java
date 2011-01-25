@@ -18,21 +18,19 @@ import org.gstreamer.elements.RGBDataSink;
  */
 class BufferedImageSink implements RGBDataSink.Listener {
 	private final BlockingQueue<Frame> queue;
-	private final String meta;
 
-	public BufferedImageSink(BlockingQueue<Frame> queue, String meta)
+	public BufferedImageSink(BlockingQueue<Frame> queue)
 	{
 		super();
 		
 		this.queue = queue;
-		this.meta = meta;
 	}
 	private long frameNumber = 0;
 	public void rgbFrame(int w, int h, IntBuffer rgbPixels) {
 		Frame frame = new Frame(
 				w, h,
 				BufferedImage.TYPE_INT_ARGB,
-				frameNumber++, meta);
+				frameNumber++);
 		frame.setRGB(0, 0, w, h, rgbPixels.array(), 0, w);
 		try {
 			queue.put(frame);

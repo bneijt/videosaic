@@ -26,7 +26,7 @@ public class FrameGenerator implements Runnable {
             String[] args = {};
             args = Gst.init("FrameGenerator", args);
             player = new PlayBin("FrameGenerator");
-            RGBDataSink.Listener listener1 = new BufferedImageSink(outputQueue, inputVideoFile.getName());
+            RGBDataSink.Listener listener1 = new BufferedImageSink(outputQueue);
             RGBDataSink videoSink = new RGBDataSink("rgb", listener1);
             player.setVideoSink(videoSink);
             player.setAudioSink(new FakeSink("AudioFlush"));
