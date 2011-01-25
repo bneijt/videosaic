@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -59,10 +60,40 @@ class App {
 		{
 			files.add(new File(arg));
 		}
+		
 		System.out.printf("Command '%s'\n", command);
 		System.out.printf("Files: %s\n", files.toString());
 		IdentStorage identStorage = new MongoDBIdentStorage();
-		if (command.equals("sub")) {
+		if (command.equals("super"))
+		{
+			File targetFile = files.get(0);
+			BlockingQueue<Frame> queue = new SynchronousQueue<Frame>();
+			FrameGenerator fg = new FrameGenerator(queue, targetFile);
+			fg.run();
+			Frame f = queue.take();
+			IdentProducer meanIdentProducer = new MeanIdentProducer();
+			
+			while (f != null) {
+				System.out.println(String.format("Frame number %d: %dx%d", f
+                        .frameNumber(), f.getWidth(), f.getHeight()));
+				FrameLocation location = new FrameLocation(targetFile
+						.getAbsolutePath(), f.frameNumber());
+				// Create idents for each of the pieces of the puzzel
+		    	int w = f.getWidth() / 40;
+		    	int h = f.getHeight() / 40;
+		    	ArrayList<String> idents = new ArrayList<String>();
+		    	for(int xOffset = 0; xOffset < f.getWidth(); xOffset += w)
+		    		for(int yOffset = 0; yOffset < f.getHeight(); yOffset += h)
+		    		{
+		    			String ident = meanIdentProducer.identify(f.getSubimage(xOffset, yOffset, w, h));
+		    			idents.add(ident);
+		    		}
+				identStorage.storeSuperIdent(idents, location);
+				f = queue.poll(2, TimeUnit.SECONDS); //TODO UGLY CODE!!
+			}
+			// Load frame idents and see if they are in the database
+			
+		} else if (command.equals("sub")) {
 			LOG.debug("Entering command: " + command);
 			// Load frame idents as targets into the database (documents)
 			// Create index of output movie
@@ -71,22 +102,19 @@ class App {
 			FrameGenerator fg = new FrameGenerator(queue, targetFile);
 			fg.run();
 			Frame f = queue.take();
+			IdentProducer meanIdentProducer = new MeanIdentProducer();
 			while (f != null) {
 				System.out.println(String.format("Frame number %d", f
                         .frameNumber()));
 				FrameLocation location = new FrameLocation(targetFile
 						.getAbsolutePath(), f.frameNumber());
-				f = queue.take();
+				f = queue.poll(2, TimeUnit.SECONDS);//TODO UGLY CODE!
 				// Create ident
-				IdentProducer ident = new MeanIdentProducer();
 				// Store ident in database
-				identStorage.storeTargetIdent(ident.identify(f), location);
-				if(!fg.running())
-					break;
+				identStorage.storeSubIdent(meanIdentProducer.identify(f), location);
 			}
-		} else if (command == "super") {
 			// Load frame idents and see if they are in the database
-		} else if (command == "store") {
+		} else if (command.equals("collapse")) {
             // Enumerate trough super frames and choose an output path from the
             // database
             // Each super frame should have an collection of sub frames ready in

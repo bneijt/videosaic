@@ -4,22 +4,17 @@ import java.util.List;
 
 public interface IdentStorage {
 	/**
-	 * Store the target ident. Any source ident which matches will be stored after this
+	 * Store the super ident. Any super ident which matches will be stored after this
 	 * @param ident
 	 * @param location
 	 */
-	public void storeTargetIdent(String ident, FrameLocation location);
+	public void storeSuperIdent(List<String> idents, FrameLocation location);
 	/**
-	 *  Try to store the ident in the datastore. If there is no target ident which matches, the ident will not be stored (and false will be returned)
+	 *  Try to store the sub ident in the datastore: this will simply connect the location to a superident if it can find one.
 	 * @param ident
 	 * @param location
-	 * @return Wether or not the frame was stored.
+	 * @return Whether or not the frame was stored.
 	 */
-	public boolean storeSourceIdent(String ident, FrameLocation location);
-	
-	/**
-	 * Return a list of locations for a given source ident
-	 * @return A list of locations
-	 */
-	public List<FrameLocation> sourceLocations(String ident);
+	public void storeSubIdent(String ident, FrameLocation location);
+
 }
