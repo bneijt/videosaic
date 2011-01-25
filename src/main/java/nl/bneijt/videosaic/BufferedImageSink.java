@@ -39,14 +39,6 @@ class BufferedImageSink implements RGBDataSink.Listener {
 		} catch (java.lang.InterruptedException e1) {
 			// player.stop();
 			LOG.info("Interrupted queue PUT for frame");
-			try {
-				queue.put(null);
-			} catch (java.lang.InterruptedException e2) {
-				// player.stop();
-				LOG.info("Interrupted queue PUT for null");
-			}
-
-		
 		}
 	};
 

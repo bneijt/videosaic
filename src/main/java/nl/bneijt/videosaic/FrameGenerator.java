@@ -8,13 +8,14 @@ import java.io.File;
 import java.util.concurrent.BlockingQueue;
 
 import org.gstreamer.Gst;
+import org.gstreamer.State;
 import org.gstreamer.elements.FakeSink;
-import org.gstreamer.elements.PlayBin;
+import org.gstreamer.elements.PlayBin2;
 import org.gstreamer.elements.RGBDataSink;
 
 public class FrameGenerator implements Runnable {
 
-        private final PlayBin player;
+        private final PlayBin2 player;
 
         /**
          * Sets up a GstreamerPlayer and load RGB frames from the inputVideoFile and place the Frame s on the outputQueue.
@@ -25,7 +26,7 @@ public class FrameGenerator implements Runnable {
         public FrameGenerator(BlockingQueue<Frame> outputQueue, File inputVideoFile) {
             String[] args = {};
             args = Gst.init("FrameGenerator", args);
-            player = new PlayBin("FrameGenerator");
+            player = new PlayBin2("FrameGenerator");
             RGBDataSink.Listener listener1 = new BufferedImageSink(outputQueue);
             RGBDataSink videoSink = new RGBDataSink("rgb", listener1);
             player.setVideoSink(videoSink);
@@ -34,5 +35,15 @@ public class FrameGenerator implements Runnable {
         }
         public void run() {
             player.play();
+        }
+        public boolean running() {
+        	State state = player.getState();
+        	if(state == State.NULL)
+        		return false;
+        	if(state == State.READY){
+        		player.setState(State.NULL);
+        		return false;
+        	}
+        	return true;
         }
 }

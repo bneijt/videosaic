@@ -81,6 +81,8 @@ class App {
 				IdentProducer ident = new MeanIdentProducer();
 				// Store ident in database
 				identStorage.storeTargetIdent(ident.identify(f), location);
+				if(!fg.running())
+					break;
 			}
 		} else if (command == "super") {
 			// Load frame idents and see if they are in the database
