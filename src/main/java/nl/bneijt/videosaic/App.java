@@ -3,6 +3,8 @@ package nl.bneijt.videosaic;
 import java.io.File;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 
@@ -16,7 +18,9 @@ import com.mongodb.MongoException;
 
 class App 
 {
-	static void main(String args[]) throws InterruptedException, MongoException, UnknownHostException {
+	
+	final static void println(String a) { System.out.println(a);}
+	public static void main(String args[]) throws InterruptedException, MongoException, UnknownHostException {
 		
     	Options options = new Options();
 
@@ -36,9 +40,11 @@ class App
     	    System.exit(0);
     	}
 		
-		String command = args[0];
+		List<String> fileArguments = Arrays.asList(cmd.getArgs()); //cmd.getArgList sucks because it does not contain a type
+		String command = fileArguments.remove(0);
 		ArrayList<File> files = new ArrayList<File>();
-		for(String arg : args)
+		
+		for(String arg : fileArguments) //TODO This is just a map, find a nice mapping system to handle this
 		{
 			files.add(new File(arg));
 		}
@@ -57,18 +63,16 @@ class App
 			Frame f = queue.take();
 			while(f != null)
 			{
-				System.out.println(f.frameNumber());
+				println(String.format("Frame number %i", f.frameNumber()));
 				FrameLocation location = new FrameLocation(targetFile.getAbsolutePath(), f.frameNumber());
 				f = queue.take();
 				//Create ident
 				IdentProducer ident = new MeanIdentProducer();
-				//Store ident in database
-				
+				//Store ident in database	
 				identStorage.storeTargetIdent(ident.identify(f), location);
 			}
 		}
 		else if (command == "source") {
-
 			//Load frame idents and see if they are in the database
 		}
 		else if (command == "store") {
