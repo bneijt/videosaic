@@ -1,7 +1,14 @@
 package nl.bneijt.videosaic;
 
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
 
 public class FrameGeneratorTest {
+	@Test
+	public void testFrameGeneratorRunnable() throws Exception {
+		
 	/*
     TODO: Move to test cases
         public static void main(String[] args) throws IOException {
@@ -21,4 +28,5 @@ duration+" ms.");
                 System.out.println("Image Capture duration = " + duration+" ms.");
         }
         */
+	}
 }
