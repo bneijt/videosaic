@@ -1,16 +1,12 @@
 package nl.bneijt.videosaic;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.SynchronousQueue;
 import java.io.File;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 
 import com.mongodb.MongoException;
-
-import nl.bneijt.videosaic.FrameGenerator;
-import nl.bneijt.videosaic.Frame;
 
 class App 
 {
