@@ -1,7 +1,5 @@
 package nl.bneijt.videosaic;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 

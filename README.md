@@ -9,7 +9,7 @@ There will be NO video changes to change the tone or other information.
 
 Plan
 ----
-- Create "target" frames by analysing the target video and placing an identity
+- Create "sub" frames by analysing the target video and placing an identity
   of the frame in a MongoDB
 - Run through all "source" frames and look their identity up in the database
   as well. If a match is found, note it in the MongoDB document of the target
