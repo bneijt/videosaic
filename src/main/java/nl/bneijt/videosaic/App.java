@@ -12,7 +12,7 @@ import com.mongodb.MongoException;
 import nl.bneijt.videosaic.FrameGenerator;
 import nl.bneijt.videosaic.Frame;
 
-class Videosaic
+class App 
 {
 	static void main(String args[]) throws InterruptedException, MongoException, UnknownHostException {
 		//TODO Use real option parsing library (maybe paulp's optional)
