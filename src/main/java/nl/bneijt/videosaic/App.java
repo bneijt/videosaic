@@ -62,7 +62,7 @@ class App {
 		System.out.printf("Command '%s'\n", command);
 		System.out.printf("Files: %s\n", files.toString());
 		IdentStorage identStorage = new MongoDBIdentStorage();
-		if (command == "sub") {
+		if (command.equals("sub")) {
 			LOG.debug("Entering command: " + command);
 			// Load frame idents as targets into the database (documents)
 			// Create index of output movie
@@ -73,7 +73,7 @@ class App {
 			Frame f = queue.take();
 			while (f != null) {
 				System.out.println(String.format("Frame number %i", f
-						.frameNumber()));
+                        .frameNumber()));
 				FrameLocation location = new FrameLocation(targetFile
 						.getAbsolutePath(), f.frameNumber());
 				f = queue.take();
@@ -85,11 +85,14 @@ class App {
 		} else if (command == "super") {
 			// Load frame idents and see if they are in the database
 		} else if (command == "store") {
-			// Enumerate trough super frames and choose an output path from the
-			// database
-			// Each super frame should have an collection of sub frames ready in
-			// the document
+            // Enumerate trough super frames and choose an output path from the
+            // database
+            // Each super frame should have an collection of sub frames ready in
+            // the document
 
-		}
+        } else {
+            System.out.println("command - " + command);
+        }
+
 	}
 }
