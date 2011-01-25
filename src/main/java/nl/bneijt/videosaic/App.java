@@ -72,7 +72,7 @@ class App {
 			fg.run();
 			Frame f = queue.take();
 			while (f != null) {
-				System.out.println(String.format("Frame number %i", f
+				System.out.println(String.format("Frame number %d", f
                         .frameNumber()));
 				FrameLocation location = new FrameLocation(targetFile
 						.getAbsolutePath(), f.frameNumber());

@@ -2,7 +2,11 @@
 package nl.bneijt.videosaic;
 import java.awt.image.BufferedImage;
 
-
+/**
+ * BufferedImage with a framenumber added
+ * @author A. Bram Neijt <bneijt@gmail.com>
+ *
+ */
 class Frame extends BufferedImage {
     
     private long frameNumber;

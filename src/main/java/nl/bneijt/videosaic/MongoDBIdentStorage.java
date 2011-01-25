@@ -19,7 +19,7 @@ public class MongoDBIdentStorage implements IdentStorage {
 	}
 	private DBCollection collection()
 	{
-		DB db = mongo.getDB(null);
+		DB db = mongo.getDB("videosaic");
 		return db.getCollection("videosaic");
 	}
 	@SuppressWarnings("unchecked")
@@ -42,10 +42,10 @@ public class MongoDBIdentStorage implements IdentStorage {
 	public void storeTargetIdent(String ident, FrameLocation location) {
 		BasicDBObject document = new BasicDBObject();
 		document.put("ident", ident);
-		document.put("location", location);
+		document.put("location", location.toString());
 		document.put("sources", new ArrayList<String>());
-		collection().insert(document);
-		throw new RuntimeException("Bram has not implemented this method yet.");
+		DBCollection col = collection();
+		col.insert(document);
 	}
 
 	@SuppressWarnings("unchecked")
