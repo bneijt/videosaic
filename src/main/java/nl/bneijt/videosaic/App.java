@@ -6,15 +6,36 @@ import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
+
 import com.mongodb.MongoException;
 
 class App 
 {
 	static void main(String args[]) throws InterruptedException, MongoException, UnknownHostException {
-		//TODO Use real option parsing library (maybe paulp's optional)
-		if(args.length < 2) {
+		
+    	Options options = new Options();
+
+    	// add t option
+    	options.addOption("v", false, "Return version information and exit") ;
+    	CommandLineParser parser = new PosixParser();
+    	CommandLine cmd = null;
+		try {
+			cmd = parser.parse( options, args);
+		} catch (ParseException e) {
+			System.out.println("Unable to parse commandline options");
 			System.out.printf("Usage: %s <command> <input file>", args[0]);
+			System.exit(1);
 		}
+    	if(cmd.hasOption("v")) {
+    	    System.out.println("Version... hmm....");
+    	    System.exit(0);
+    	}
+		
 		String command = args[0];
 		ArrayList<File> files = new ArrayList<File>();
 		for(String arg : args)
