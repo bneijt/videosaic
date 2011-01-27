@@ -64,6 +64,7 @@ class App {
 		System.out.printf("Command '%s'\n", command);
 		System.out.printf("Files: %s\n", files.toString());
 		IdentStorage identStorage = new MongoDBIdentStorage();
+		IdentProducer identifier = new MeanLevelIdentProducer();
 		if (command.equals("super"))
 		{
 			File targetFile = files.get(0);
@@ -71,7 +72,6 @@ class App {
 			FrameGenerator fg = new FrameGenerator(queue, targetFile);
 			fg.run();
 			Frame f = queue.take();
-			IdentProducer meanIdentProducer = new MeanIdentProducer();
 			
 			while (f != null) {
 				System.out.println(String.format("Frame number %d: %dx%d", f
@@ -85,7 +85,7 @@ class App {
 		    	for(int xOffset = 0; xOffset < f.getWidth(); xOffset += w)
 		    		for(int yOffset = 0; yOffset < f.getHeight(); yOffset += h)
 		    		{
-		    			String ident = meanIdentProducer.identify(f.getSubimage(xOffset, yOffset, w, h));
+		    			String ident = identifier.identify(f.getSubimage(xOffset, yOffset, w, h));
 		    			idents.add(ident);
 		    		}
 				identStorage.storeSuperIdent(idents, location);
@@ -102,14 +102,13 @@ class App {
 			FrameGenerator fg = new FrameGenerator(queue, targetFile);
 			fg.run();
 			Frame f = queue.take();
-			IdentProducer meanIdentProducer = new MeanIdentProducer();
 			while (f != null) {
 				System.out.println(String.format("Frame number %d", f
                         .frameNumber()));
 				FrameLocation location = new FrameLocation(targetFile
 						.getAbsolutePath(), f.frameNumber());
 				
-				identStorage.storeSubIdent(meanIdentProducer.identify(f), location);
+				identStorage.storeSubIdent(identifier.identify(f), location);
 
 				f = queue.poll(2, TimeUnit.SECONDS);//TODO UGLY CODE!
 				// Create ident
@@ -133,9 +132,8 @@ class App {
 				FrameGenerator fg = new FrameGenerator(queue, targetFile);
 				fg.run();
 				Frame f = queue.take();
-				IdentProducer meanIdentProducer = new MeanIdentProducer();
 				while (f != null) {
-					System.out.println(meanIdentProducer.identify(f));
+					System.out.println(identifier.identify(f));
 					f = queue.poll(2, TimeUnit.SECONDS);//TODO UGLY CODE!
 				}
 			}

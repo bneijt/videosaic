@@ -42,9 +42,8 @@ public class MongoDBIdentStorage implements IdentStorage {
 		BasicDBObject sub = new BasicDBObject();
 		sub.append("sub", location.toString());
 		update.append("$push", sub);
-		
-		WriteResult result = collection.update(query, update);
-		if(result.getN() > 1){
+		WriteResult result = collection.update(query, update, false, true);
+		if(result.getN() > 0){
 			LOG.info("Updated ident " + ident);			
 		}
 	}
