@@ -5,13 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.bson.types.ObjectId;
+import org.apache.log4j.Logger;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
+import com.mongodb.WriteResult;
 
 /**
  * This will store sub and super frames in the mongodb It will store document
@@ -24,6 +25,8 @@ import com.mongodb.MongoException;
 public class MongoDBIdentStorage implements IdentStorage {
 	private final Mongo mongo;
 	private final DBCollection collection;
+	private final Logger LOG = Logger.getLogger(MongoDBIdentStorage.class);
+	
 	public MongoDBIdentStorage() throws MongoException, UnknownHostException {
 		mongo = new Mongo();
 		DB db = mongo.getDB("videosaic");
@@ -40,11 +43,15 @@ public class MongoDBIdentStorage implements IdentStorage {
 		sub.append("sub", location.toString());
 		update.append("$push", sub);
 		
-		collection.update(query, update);
+		WriteResult result = collection.update(query, update);
+		if(result.getN() > 1){
+			LOG.info("Updated ident " + ident);			
+		}
 	}
 
 	@Override
 	public void storeSuperIdent(List<String> idents, FrameLocation location) {
+		LOG.debug("Storring " + idents.size() + " idents");
 		for (int i = 0; i < idents.size(); ++i) {
 			BasicDBObject document = new BasicDBObject();
 			document.append("ident", idents.get(i));

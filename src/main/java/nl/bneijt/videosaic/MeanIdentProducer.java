@@ -13,7 +13,14 @@ class MeanIdentProducer implements IdentProducer
     */
     public String identify(BufferedImage i)
     {
+    	int[] levels = this.quadrantMeans(i);
+    	
+    	//Return the value as a string
+        return levels[0] + "." + levels[1] + "." + levels[2] + "." + levels[3];
+    }
+    public int[] quadrantMeans(BufferedImage i) {
         //Split the image into 4 quadrants [a b; c d]
+    	assert(i != null);
     	int w = i.getWidth() / 2;
     	int h = i.getHeight() / 2;
     	BufferedImage a = i.getSubimage(0, 0, w, h);
@@ -23,11 +30,9 @@ class MeanIdentProducer implements IdentProducer
     	
         //Find the mean intensity of each quadrant
     	int[] levels = {meanIntensity(a), meanIntensity(b), meanIntensity(c), meanIntensity(d)};
-        
-    	//Return the value as a string
-        return levels[0] + "." + levels[1] + "." + levels[2] + "." + levels[3];
-    }
-    /**
+    	return levels;
+	}
+	/**
      * Return the mean intensity of the BufferedImage i using summed RGB value of all pixels
      * @param i
      * @return

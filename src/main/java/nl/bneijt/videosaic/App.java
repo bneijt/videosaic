@@ -108,10 +108,12 @@ class App {
                         .frameNumber()));
 				FrameLocation location = new FrameLocation(targetFile
 						.getAbsolutePath(), f.frameNumber());
+				
+				identStorage.storeSubIdent(meanIdentProducer.identify(f), location);
+
 				f = queue.poll(2, TimeUnit.SECONDS);//TODO UGLY CODE!
 				// Create ident
 				// Store ident in database
-				identStorage.storeSubIdent(meanIdentProducer.identify(f), location);
 			}
 			// Load frame idents and see if they are in the database
 		} else if (command.equals("collapse")) {
@@ -120,7 +122,25 @@ class App {
             // Each super frame should have an collection of sub frames ready in
             // the document
 
-        } else {
+        } else if (command.equals("dump")) {
+        	///Output the frame idents to stdout
+			LOG.debug("Entering command: " + command);
+			// Load frame idents as targets into the database (documents)
+			// Create index of output movie
+			BlockingQueue<Frame> queue = new SynchronousQueue<Frame>();
+			for(File targetFile : files)
+			{
+				FrameGenerator fg = new FrameGenerator(queue, targetFile);
+				fg.run();
+				Frame f = queue.take();
+				IdentProducer meanIdentProducer = new MeanIdentProducer();
+				while (f != null) {
+					System.out.println(meanIdentProducer.identify(f));
+					f = queue.poll(2, TimeUnit.SECONDS);//TODO UGLY CODE!
+				}
+			}
+        }
+		else {
             System.out.println("command - " + command);
         }
 
