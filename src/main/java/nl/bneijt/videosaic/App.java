@@ -17,6 +17,9 @@ import org.apache.log4j.Logger;
 
 import com.mongodb.MongoException;
 
+import nl.bneijt.videosaic.FrameLocation;
+import nl.bneijt.videosaic.Frame;
+
 class App {
 	static final Logger LOG = Logger.getLogger(App.class);
 	
@@ -115,12 +118,16 @@ class App {
 				// Store ident in database
 			}
 			// Load frame idents and see if they are in the database
-		} else if (command.equals("collapse")) {
+		} else if(command.equals("info")) {
+			//Show general storage information
+			System.out.println(identStorage.information());
+		}
+		else if (command.equals("collapse")) {
             // Enumerate trough super frames and choose an output path from the
             // database
             // Each super frame should have an collection of sub frames ready in
             // the document
-
+		
         } else if (command.equals("dump")) {
         	///Output the frame idents to stdout
 			LOG.debug("Entering command: " + command);

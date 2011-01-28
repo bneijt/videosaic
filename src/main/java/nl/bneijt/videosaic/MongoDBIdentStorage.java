@@ -63,5 +63,14 @@ public class MongoDBIdentStorage implements IdentStorage {
 		}
 	}
 
+	@Override
+	public String information() {
+		// TODO Auto-generated method stub
+		String count = "Record count: " + collection.find().count();
+		//Find number without sub-records
+		return count;
+		
+	}
+
 
 }

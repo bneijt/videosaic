@@ -16,5 +16,6 @@ public interface IdentStorage {
 	 * @return Whether or not the frame was stored.
 	 */
 	public void storeSubIdent(String ident, FrameLocation location);
+	public String information();
 
 }
