@@ -134,6 +134,8 @@ class App {
 		} else if (command.equals("info")) {
 			// Show general storage information
 			System.out.println(identStorage.information());
+		} else if (command.equals("clear")) {
+			identStorage.clear();
 		} else if (command.equals("collapse")) {
 			// Enumerate trough super frames and choose an output path from the
 			// database
@@ -141,8 +143,7 @@ class App {
 			// the document
 			// Target video is a given file
 			DiskFrameStorage frameStorage = new DiskFrameStorage();
-			File targetFile = new File(
-					"/home/bram/program/videosaic/vid/onesecond.ogg");
+			File targetFile = files.get(0);
 			for (int frameNumber = 0;; ++frameNumber) {
 				FrameLocation location = new FrameLocation(targetFile
 						.getAbsolutePath(), frameNumber);

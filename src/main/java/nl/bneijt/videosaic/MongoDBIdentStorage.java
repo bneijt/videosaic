@@ -29,11 +29,12 @@ import com.mongodb.WriteResult;
 public class MongoDBIdentStorage implements IdentStorage {
 	private final Mongo mongo;
 	private final DBCollection collection;
+	private final DB db;
 	private final Logger LOG = Logger.getLogger(MongoDBIdentStorage.class);
 	
 	public MongoDBIdentStorage() throws MongoException, UnknownHostException {
 		mongo = new Mongo();
-		DB db = mongo.getDB("videosaic");
+		this.db = mongo.getDB("videosaic");
 		collection = db.getCollection("frames");
 	}
 
@@ -102,6 +103,12 @@ public class MongoDBIdentStorage implements IdentStorage {
 			subframes.put((Integer) frame.get("index"), new FrameLocation(sub));
 		}
 		return new ArrayList<FrameLocation>(subframes.values());
+	}
+
+	@Override
+	public void clear() {
+		LOG.debug("Dropping database");
+		this.db.dropDatabase();
 	}
 
 
