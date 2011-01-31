@@ -36,6 +36,7 @@ public class FrameGenerator implements Runnable {
 		player.setVideoSink(videoSink);
 		player.setAudioSink(new FakeSink("AudioFlush"));
 		player.setInputFile(inputVideoFile);
+		player.useClock(null);//As fast as possible
 	}
 
 	public void run() {
