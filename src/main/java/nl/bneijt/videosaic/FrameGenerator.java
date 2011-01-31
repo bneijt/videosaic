@@ -9,6 +9,7 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.gstreamer.Gst;
+import org.gstreamer.State;
 import org.gstreamer.elements.FakeSink;
 import org.gstreamer.elements.PlayBin2;
 import org.gstreamer.elements.RGBDataSink;
@@ -43,6 +44,10 @@ public class FrameGenerator implements Runnable {
 		LOG.debug("Starting FrameGenerator");
 		player.play();
 	}
-
+	public void close() {
+		LOG.debug("Closing FrameGenerator");
+		player.stop();
+		player.setState(State.NULL);
+	}
 	
 }

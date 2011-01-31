@@ -31,7 +31,8 @@ class App {
 
 	public static void main(String args[]) throws InterruptedException,
 			MongoException, IOException {
-
+		final int nTilesPerSide = 10;
+		
 		Options options = new Options();
 
 		// add t option
@@ -88,8 +89,8 @@ class App {
 				FrameLocation location = new FrameLocation(targetFile
 						.getAbsolutePath(), f.frameNumber());
 				// Create idents for each of the pieces of the puzzel
-				int w = f.getWidth() / 40;
-				int h = f.getHeight() / 40;
+				int w = f.getWidth() / nTilesPerSide;
+				int h = f.getHeight() / nTilesPerSide;
 				ArrayList<String> idents = new ArrayList<String>();
 				for (int xOffset = 0; xOffset < f.getWidth(); xOffset += w)
 					for (int yOffset = 0; yOffset < f.getHeight(); yOffset += h) {
@@ -153,10 +154,10 @@ class App {
 				// Load subframe as buffered image
 				BufferedImage subframe = loadImage(fl);
 				// Scale to fit
-				Image scaledSubframe = subframe.getScaledInstance(320 / 40,
-						240 / 40, Image.SCALE_SMOOTH);
-				int x = i * (320 / 40) % 40;
-				int y = i / (320 / 40);
+				Image scaledSubframe = subframe.getScaledInstance(320 / nTilesPerSide,
+						240 / nTilesPerSide, Image.SCALE_SMOOTH);
+				int x = i * (320 / nTilesPerSide) % nTilesPerSide;
+				int y = i / (320 / nTilesPerSide);
 				// Store the subframe in the bufferedImage
 				assert (x < outputFrame.getWidth());
 				assert (y < outputFrame.getHeight());
@@ -204,6 +205,7 @@ class App {
 			f = queue.poll(2, TimeUnit.SECONDS);// TODO UGLY CODE!
 			frameIndex--;
 		}
+		fg.close();
 		LOG.debug(String.format("Returning frame from %s", imageFile.getName()));
 		return f;
 	}

@@ -1,7 +1,10 @@
 Mosaic program for video's
 ==========================
 
-Input one target video, input multiple source video's (may include the target video)
+Future usage:
+- Input a super video into the MongoDB instance using the "super" command
+- Input a sub video into the MongoDB and on disk using the "sub" command
+- Collapse the video's into one using MongoDB and the disk stored images
 
 It should create a video based on the different video's you've given to create a mosaic.
 There will be NO video changes to change the tone or other information.
