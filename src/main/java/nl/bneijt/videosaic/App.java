@@ -105,6 +105,7 @@ class App {
 
 		} else if (command.equals("sub")) {
 			LOG.debug("Entering command: " + command);
+			DiskFrameStorage frameStorage = new DiskFrameStorage();
 			// Load frame idents as targets into the database (documents)
 			// Create index of output movie
 			File targetFile = files.get(0);
@@ -119,10 +120,12 @@ class App {
 						.getAbsolutePath(), f.frameNumber());
 
 				identStorage.storeSubIdent(identifier.identify(f), location);
-
+				//Store the thumbnail on disk, frame store is born!
+				frameStorage.storeSubFrame(f.getScaledInstance(320 / nTilesPerSide,
+						240 / nTilesPerSide, Image.SCALE_SMOOTH), location);
+				
+				
 				f = queue.poll(2, TimeUnit.SECONDS);// TODO UGLY CODE!
-				// Create ident
-				// Store ident in database
 			}
 			// Load frame idents and see if they are in the database
 		} else if (command.equals("info")) {
@@ -134,6 +137,7 @@ class App {
 			// Each super frame should have an collection of sub frames ready in
 			// the document
 			// Target video is a given file
+			DiskFrameStorage frameStorage = new DiskFrameStorage();
 			File targetFile = new File(
 					"/home/bram/program/videosaic/vid/onesecond.ogg");
 			FrameLocation location = new FrameLocation(targetFile
@@ -152,7 +156,7 @@ class App {
 				LOG.debug(String.format("Loading subimage %d from %s", i, fl
 						.toString()));
 				// Load subframe as buffered image
-				BufferedImage subframe = loadImage(fl);
+				BufferedImage subframe = frameStorage.loadImage(fl);
 				// Scale to fit
 				Image scaledSubframe = subframe.getScaledInstance(320 / nTilesPerSide,
 						240 / nTilesPerSide, Image.SCALE_SMOOTH);
@@ -190,23 +194,4 @@ class App {
 
 	}
 
-	private static BufferedImage loadImage(FrameLocation fl)
-			throws InterruptedException {
-		
-		File imageFile = fl.getFile();
-		long frameIndex = fl.getFrameNumber();
-		LOG.debug(String.format("Seeking to frame %d in %s", frameIndex, imageFile.getName()));
-		BlockingQueue<Frame> queue = new SynchronousQueue<Frame>();
-		FrameGenerator fg = new FrameGenerator(queue, imageFile);
-		fg.run();
-
-		Frame f = queue.poll(10, TimeUnit.SECONDS);
-		while (f != null && frameIndex > 0) {
-			f = queue.poll(2, TimeUnit.SECONDS);// TODO UGLY CODE!
-			frameIndex--;
-		}
-		fg.close();
-		LOG.debug(String.format("Returning frame from %s", imageFile.getName()));
-		return f;
-	}
 }
