@@ -1,6 +1,6 @@
 #!/bin/bash
 mvn clean assembly:assembly
-java -cp target/videosaic-1.0-SNAPSHOT-jar-with-dependencies.jar nl.bneijt.videosaic.App clean
+java -cp target/videosaic-1.0-SNAPSHOT-jar-with-dependencies.jar nl.bneijt.videosaic.App clear
 rm -rf /tmp/substorage
 rm -f /tmp/image_*.png
 echo "##################### SUPER"

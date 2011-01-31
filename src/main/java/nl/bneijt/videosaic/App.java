@@ -75,7 +75,7 @@ class App {
 		System.out.printf("Command '%s'\n", command);
 		System.out.printf("Files: %s\n", files.toString());
 		IdentStorage identStorage = new MongoDBIdentStorage();
-		IdentProducer identifier = new MeanColorIdentProducer();
+		IdentProducer identifier = new MeanIdentProducer();
 		if (command.equals("super")) {
 			File targetFile = files.get(0);
 			BlockingQueue<Frame> queue = new SynchronousQueue<Frame>();
