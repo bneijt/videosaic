@@ -22,9 +22,11 @@ Plan
 
 TODO
 ----
-- Drop all Scala out of the project
 - Add database matching system (MongoDB map-reduce job?)
-- Create image filter to extract Frame information
+- Remove all constants
+- Add code to generate a video without using ffmpeg
+- Find the beste matching system
+- Do a complete rewrite
 
 Current usage:
 ((Make sure you have mongodb running))
