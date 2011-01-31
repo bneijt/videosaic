@@ -118,10 +118,11 @@ class App {
 						.frameNumber()));
 				FrameLocation location = new FrameLocation(targetFile
 						.getAbsolutePath(), f.frameNumber());
-
-				identStorage.storeSubIdent(identifier.identify(f), location);
+				
+				boolean stored = identStorage.storeSubIdent(identifier.identify(f), location);
 				//Store the thumbnail on disk, frame store is born!
-				frameStorage.storeSubFrame(f.getScaledInstance(320 / nTilesPerSide,
+				if(stored)
+					frameStorage.storeFrame(f.getScaledInstance(320 / nTilesPerSide,
 						240 / nTilesPerSide, Image.SCALE_SMOOTH), location);
 				
 				
@@ -140,38 +141,47 @@ class App {
 			DiskFrameStorage frameStorage = new DiskFrameStorage();
 			File targetFile = new File(
 					"/home/bram/program/videosaic/vid/onesecond.ogg");
-			FrameLocation location = new FrameLocation(targetFile
-					.getAbsolutePath(), 0);
-			// Find a frame and all it's sub-frames
-			List<FrameLocation> subframes = identStorage
-					.loadSubFrames(location);
-			LOG.debug(String.format("Found %d sub frames", subframes.size()));
-			// Collapse all the sub-frames of the current frame into it's parts.
-			// Use a default of black if the frame is missing
-			BufferedImage outputFrame = new BufferedImage(320, 240,
-					BufferedImage.TYPE_INT_RGB);
-			Graphics2D outputGraphics = outputFrame.createGraphics();
-			for (int i = 0; i < subframes.size(); ++i) {
-				FrameLocation fl = subframes.get(i);
-				LOG.debug(String.format("Loading subimage %d from %s", i, fl
-						.toString()));
-				// Load subframe as buffered image
-				BufferedImage subframe = frameStorage.loadImage(fl);
-				// Scale to fit
-				Image scaledSubframe = subframe.getScaledInstance(320 / nTilesPerSide,
-						240 / nTilesPerSide, Image.SCALE_SMOOTH);
-				int x = i * (320 / nTilesPerSide) % nTilesPerSide;
-				int y = i / (320 / nTilesPerSide);
-				// Store the subframe in the bufferedImage
-				assert (x < outputFrame.getWidth());
-				assert (y < outputFrame.getHeight());
-				// Paste the subimage
-				outputGraphics.drawImage(scaledSubframe, 0, 0, null);
+			for (int frameNumber = 0;; ++frameNumber) {
+				FrameLocation location = new FrameLocation(targetFile
+						.getAbsolutePath(), frameNumber);
+				// Find a frame and all it's sub-frames
+				List<FrameLocation> subframes = identStorage
+						.loadSubFrames(location);
+				LOG.debug(String
+						.format("Found %d sub frames", subframes.size()));
+				if(subframes.size() == 0)
+						break;
+				// Collapse all the sub-frames of the current frame into it's
+				// parts.
+				// Use a default of black if the frame is missing
+				BufferedImage outputFrame = new BufferedImage(320, 240,
+						BufferedImage.TYPE_INT_RGB);
+				Graphics2D outputGraphics = outputFrame.createGraphics();
+				for (int i = 0; i < subframes.size(); ++i) {
+					FrameLocation fl = subframes.get(i);
+					LOG.debug(String.format("Loading subimage %d from %s", i,
+							fl.toString()));
+					// Load subframe as buffered image
+					BufferedImage subframe = frameStorage.loadFrame(fl);
+					// Scale to fit
+					int tileWidth = 320 / nTilesPerSide;
+					int tileHeight = 240 / nTilesPerSide;
+					Image scaledSubframe = subframe.getScaledInstance(
+							tileWidth, tileHeight, Image.SCALE_SMOOTH);
+					int x = tileWidth * (i % nTilesPerSide);
+					int y = tileHeight * (i / nTilesPerSide);
+					// Store the subframe in the bufferedImage
+					assert (x < outputFrame.getWidth());
+					assert (y < outputFrame.getHeight());
+					// Paste the subimage
+					LOG
+							.debug(String.format("Putting sub frame at %d,%d",
+									x, y));
+					outputGraphics.drawImage(scaledSubframe, x, y, null);
 
+				}
+				ImageIO.write(outputFrame, "png", new File(String.format("/tmp/image_%d.png", frameNumber)));
 			}
-			ImageIO.write(outputFrame, "png", new File("/tmp/output.png"));
-			// Output a png file, we will combine it into a movie later (using
-			// something like ffmpeg)
 
 		} else if (command.equals("dump")) {
 			// /Output the frame idents to stdout

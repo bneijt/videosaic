@@ -38,7 +38,7 @@ public class MongoDBIdentStorage implements IdentStorage {
 	}
 
 	@Override
-	public void storeSubIdent(String ident, FrameLocation location) {
+	public boolean storeSubIdent(String ident, FrameLocation location) {
 		BasicDBObject query = new BasicDBObject();
 		query.append("ident", ident);
 
@@ -48,8 +48,10 @@ public class MongoDBIdentStorage implements IdentStorage {
 		update.append("$push", sub);
 		WriteResult result = collection.update(query, update, false, true);
 		if(result.getN() > 0){
-			LOG.info("Updated ident " + ident);			
+			LOG.info("Updated ident " + ident);
+			return true;
 		}
+		return false;
 	}
 
 	@Override

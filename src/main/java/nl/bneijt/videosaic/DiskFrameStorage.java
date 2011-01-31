@@ -24,7 +24,17 @@ import com.google.common.base.Joiner;
 public class DiskFrameStorage {
 	private final static Logger LOG = Logger.getLogger(DiskFrameStorage.class);
 	
-	public BufferedImage loadImage(FrameLocation fl) throws InterruptedException {
+	public BufferedImage loadFrame(FrameLocation fl) throws InterruptedException, IOException {
+		//Optimization: try cache
+		File storageLocation = this.storageLocation(fl);
+		if(storageLocation.exists())
+		{
+			LOG.debug(String.format("Hit cache at: %s", storageLocation.getAbsolutePath()));
+			return ImageIO.read(storageLocation);
+		}
+		//Fall-back method: open file and seek to image
+		LOG.debug(String.format("Not found in cache, loading: %s", storageLocation.getAbsolutePath()));
+		
 		File imageFile = fl.getFile();
 		long frameIndex = fl.getFrameNumber();
 		LOG.debug(String.format("Seeking to frame %d in %s", frameIndex, imageFile.getName()));
@@ -38,25 +48,32 @@ public class DiskFrameStorage {
 			frameIndex--;
 		}
 		fg.close();
-		LOG.debug(String.format("Returning frame from %s", imageFile.getName()));
+		this.storeFrame(f, fl);//TODO Wrong size is stored here.
 		return f;
 
 		
 	}
-	public void storeSubFrame(Image image, FrameLocation location) throws IOException {
+	
+	public void storeFrame(Image image, FrameLocation location) throws IOException {
 		BufferedImage bufferedImage =
 		     new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_RGB);
 		Graphics2D bufImageGraphics = bufferedImage.createGraphics();
 		bufImageGraphics.drawImage(image, 0, 0, null);
-		this.storeSubFrame(bufferedImage, location);
+		this.storeFrame(bufferedImage, location);
 	}
 	
-	public void storeSubFrame(BufferedImage image, FrameLocation location) throws IOException {
-		File storageLocation = new File(Joiner
-.on(File.separator).join("/tmp/substorage", location.getFile().getName(), String.format("%d.png", location.getFrameNumber())));
+	public void storeFrame(BufferedImage image, FrameLocation location) throws IOException {
+		File storageLocation = storageLocation(location);
 		LOG.debug(String.format("Translated %s into file path %s", location.toString(), storageLocation.getAbsolutePath()));
 		FileUtils.forceMkdir(storageLocation.getParentFile());
 		ImageIO.write(image, "png", storageLocation);
 	}
+
+	private File storageLocation(FrameLocation location) {
+		File storageLocation = new File(Joiner
+.on(File.separator).join("/tmp/substorage", location.getFile().getName(), String.format("%d.png", location.getFrameNumber())));
+		return storageLocation;
+	}
+	
 	
 }
