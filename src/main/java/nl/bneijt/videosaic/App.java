@@ -32,7 +32,7 @@ class App {
 	public static void main(String args[]) throws InterruptedException,
 			MongoException, IOException {
 		final int nTilesPerSide = 10;
-		
+
 		Options options = new Options();
 
 		// add t option
@@ -117,17 +117,17 @@ class App {
 				FrameLocation location = new FrameLocation(targetFile
 						.getAbsolutePath(), f.frameNumber());
 				String ident = identifier.identify(f);
-				
+
 				System.out.println(String.format("Frame number %d ident %s", f
 						.frameNumber(), ident));
-				
+
 				boolean stored = identStorage.storeSubIdent(ident, location);
-				//Store the thumbnail on disk, frame store is born!
-				if(stored)
-					frameStorage.storeFrame(f.getScaledInstance(320 / nTilesPerSide,
-						240 / nTilesPerSide, Image.SCALE_SMOOTH), location);
-				
-				
+				// Store the thumbnail on disk, frame store is born!
+				if (stored)
+					frameStorage.storeFrame(f.getScaledInstance(
+							320 / nTilesPerSide, 240 / nTilesPerSide,
+							Image.SCALE_SMOOTH), location);
+
 				f = queue.poll(2, TimeUnit.SECONDS);// TODO UGLY CODE!
 			}
 			// Load frame idents and see if they are in the database
@@ -152,8 +152,8 @@ class App {
 						.loadSubFrames(location);
 				LOG.debug(String
 						.format("Found %d sub frames", subframes.size()));
-				if(subframes.size() == 0)
-						break;
+				if (subframes.size() == 0)
+					break;
 				// Collapse all the sub-frames of the current frame into it's
 				// parts.
 				// Use a default of black if the frame is missing
@@ -183,7 +183,8 @@ class App {
 					outputGraphics.drawImage(scaledSubframe, x, y, null);
 
 				}
-				ImageIO.write(outputFrame, "png", new File(String.format("/tmp/image_%d.png", frameNumber)));
+				ImageIO.write(outputFrame, "png", new File(String.format(
+						"/tmp/image_%d.png", frameNumber)));
 			}
 
 		} else if (command.equals("dump")) {
