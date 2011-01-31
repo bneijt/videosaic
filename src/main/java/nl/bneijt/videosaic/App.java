@@ -75,7 +75,7 @@ class App {
 		System.out.printf("Command '%s'\n", command);
 		System.out.printf("Files: %s\n", files.toString());
 		IdentStorage identStorage = new MongoDBIdentStorage();
-		IdentProducer identifier = new MeanLevelIdentProducer();
+		IdentProducer identifier = new MeanColorIdentProducer();
 		if (command.equals("super")) {
 			File targetFile = files.get(0);
 			BlockingQueue<Frame> queue = new SynchronousQueue<Frame>();
@@ -114,12 +114,14 @@ class App {
 			fg.run();
 			Frame f = queue.poll(10, TimeUnit.SECONDS);
 			while (f != null) {
-				System.out.println(String.format("Frame number %d", f
-						.frameNumber()));
 				FrameLocation location = new FrameLocation(targetFile
 						.getAbsolutePath(), f.frameNumber());
+				String ident = identifier.identify(f);
 				
-				boolean stored = identStorage.storeSubIdent(identifier.identify(f), location);
+				System.out.println(String.format("Frame number %d ident %s", f
+						.frameNumber(), ident));
+				
+				boolean stored = identStorage.storeSubIdent(ident, location);
 				//Store the thumbnail on disk, frame store is born!
 				if(stored)
 					frameStorage.storeFrame(f.getScaledInstance(320 / nTilesPerSide,

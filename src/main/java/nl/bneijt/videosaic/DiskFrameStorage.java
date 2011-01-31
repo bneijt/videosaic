@@ -32,26 +32,8 @@ public class DiskFrameStorage {
 			LOG.debug(String.format("Hit cache at: %s", storageLocation.getAbsolutePath()));
 			return ImageIO.read(storageLocation);
 		}
-		//Fall-back method: open file and seek to image
-		LOG.debug(String.format("Not found in cache, loading: %s", storageLocation.getAbsolutePath()));
-		
-		File imageFile = fl.getFile();
-		long frameIndex = fl.getFrameNumber();
-		LOG.debug(String.format("Seeking to frame %d in %s", frameIndex, imageFile.getName()));
-		BlockingQueue<Frame> queue = new SynchronousQueue<Frame>();
-		FrameGenerator fg = new FrameGenerator(queue, imageFile);
-		fg.run();
-
-		Frame f = queue.poll(10, TimeUnit.SECONDS);
-		while (f != null && frameIndex > 0) {
-			f = queue.poll(2, TimeUnit.SECONDS);// TODO UGLY CODE!
-			frameIndex--;
-		}
-		fg.close();
-		this.storeFrame(f, fl);//TODO Wrong size is stored here.
-		return f;
-
-		
+		//Fall back: return black image
+		return new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
 	}
 	
 	public void storeFrame(Image image, FrameLocation location) throws IOException {

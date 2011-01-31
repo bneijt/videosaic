@@ -26,4 +26,11 @@ TODO
 - Add database matching system (MongoDB map-reduce job?)
 - Create image filter to extract Frame information
 
+Current usage:
+((Make sure you have mongodb running))
+mvn clean assembly:assembly
+java -cp target/videosaic-1.0-SNAPSHOT-jar-with-dependencies.jar nl.bneijt.videosaic.App super vid/onesecond.ogg
+java -cp target/videosaic-1.0-SNAPSHOT-jar-with-dependencies.jar nl.bneijt.videosaic.App sub vid/plane.ogg
+java -cp target/videosaic-1.0-SNAPSHOT-jar-with-dependencies.jar nl.bneijt.videosaic.App collapse
+ffmpeg -f image2 -i /tmp/image_%d.png -s 640x480 -r 12 /tmp/image.avi
 
