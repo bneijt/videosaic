@@ -3,13 +3,17 @@ package nl.bneijt.videosaic;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
@@ -71,6 +75,34 @@ public class MongoDBIdentStorage implements IdentStorage {
 		return count;
 		
 	}
+
+	@Override
+	public ArrayList<FrameLocation> loadSubFrames(FrameLocation location) {
+		LOG.debug(String.format("Loading subframes for: %s", location));
+		BasicDBObject query = new BasicDBObject();
+		query.append("location", location.toString());
+		DBCursor result = collection.find(query);
+		TreeMap<Integer, FrameLocation> subframes = new TreeMap<Integer, FrameLocation>();
+		while(result.hasNext())
+		{
+			DBObject frame = result.next();
+			assert(frame.containsField("index"));
+			assert(frame.containsField("sub"));
+			BasicDBList subs = (BasicDBList) frame.get("sub");
+			LOG.debug(String.format("Found %d subs for frame %s", subs.size(), location.toString()));
+			if(subs.size() <= 0)
+			{
+				subframes.put((Integer) frame.get("index"), location); //Self reference when there are no sub-frames (Should be black in the future)
+				continue;
+			}
+			assert(subs.size() > 0);//Simply get the first sub-frame as a frame
+			String sub = (String) subs.get(0);
+			subframes.put((Integer) frame.get("index"), new FrameLocation(sub));
+		}
+		return new ArrayList<FrameLocation>(subframes.values());
+	}
+
+
 
 
 }

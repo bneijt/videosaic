@@ -17,5 +17,6 @@ public interface IdentStorage {
 	 */
 	public void storeSubIdent(String ident, FrameLocation location);
 	public String information();
+	public List<FrameLocation> loadSubFrames(FrameLocation location);
 
 }
