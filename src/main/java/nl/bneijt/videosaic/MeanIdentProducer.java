@@ -2,6 +2,8 @@
 package nl.bneijt.videosaic;
 import nl.bneijt.videosaic.IdentProducer;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
+import java.util.List;
 
 /** Mean of quadrant ident producer
 */
@@ -11,12 +13,17 @@ class MeanIdentProducer implements IdentProducer
         This will return 4 strings based on the intensity
         of their 4 quadrants
     */
-    public String identify(BufferedImage i)
+    public List<String> identify(BufferedImage i)
     {
     	int[] levels = this.quadrantMeans(i);
-    	
+    	String[] s = {
+    				String.format("%d", levels[0]),
+    				String.format("%d", levels[1]),
+    				String.format("%d", levels[2]),
+    				String.format("%d", levels[3]),
+    		};
     	//Return the value as a string
-        return levels[0] + "." + levels[1] + "." + levels[2] + "." + levels[3];
+        return Arrays.asList(s);
     }
     public int[] quadrantMeans(BufferedImage i) {
         //Split the image into 4 quadrants [a b; c d]

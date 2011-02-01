@@ -8,14 +8,14 @@ public interface IdentStorage {
 	 * @param ident
 	 * @param location
 	 */
-	public void storeSuperIdent(List<String> idents, FrameLocation location);
+	public void storeSuperIdent(List< List<String> > idents, FrameLocation location);
 	/**
 	 *  Try to store the sub ident in the datastore: this will simply connect the location to a superident if it can find one.
 	 * @param ident
 	 * @param location
 	 * @return Whether or not the frame was stored.
 	 */
-	public boolean storeSubIdent(String ident, FrameLocation location);
+	public boolean storeSubIdent(List<String> ident, FrameLocation location);
 	public String information();
 	public List<FrameLocation> loadSubFrames(FrameLocation location);
 	public void clear();

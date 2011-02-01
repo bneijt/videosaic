@@ -1,11 +1,12 @@
 
 package nl.bneijt.videosaic;
 import java.awt.image.BufferedImage;
+import java.util.List;
 
 interface IdentProducer
 {
     /** Produce an ident string from an image
     */
-    public String identify(BufferedImage img);
+    public List<String> identify(BufferedImage img);
 }
 

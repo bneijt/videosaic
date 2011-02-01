@@ -75,7 +75,7 @@ class App {
 		System.out.printf("Command '%s'\n", command);
 		System.out.printf("Files: %s\n", files.toString());
 		IdentStorage identStorage = new MongoDBIdentStorage();
-		IdentProducer identifier = new MeanIdentProducer();
+		IdentProducer identifier = new MeanLevelIdentProducer();
 		if (command.equals("super")) {
 			File targetFile = files.get(0);
 			BlockingQueue<Frame> queue = new SynchronousQueue<Frame>();
@@ -91,10 +91,10 @@ class App {
 				// Create idents for each of the pieces of the puzzel
 				int w = f.getWidth() / nTilesPerSide;
 				int h = f.getHeight() / nTilesPerSide;
-				ArrayList<String> idents = new ArrayList<String>();
+				ArrayList< List<String> > idents = new ArrayList< List<String> >();
 				for (int xOffset = 0; xOffset < f.getWidth(); xOffset += w)
 					for (int yOffset = 0; yOffset < f.getHeight(); yOffset += h) {
-						String ident = identifier.identify(f.getSubimage(
+						List<String> ident = identifier.identify(f.getSubimage(
 								xOffset, yOffset, w, h));
 						idents.add(ident);
 					}
@@ -116,7 +116,7 @@ class App {
 			while (f != null) {
 				FrameLocation location = new FrameLocation(targetFile
 						.getAbsolutePath(), f.frameNumber());
-				String ident = identifier.identify(f);
+				List<String> ident = identifier.identify(f);
 
 				System.out.println(String.format("Frame number %d ident %s", f
 						.frameNumber(), ident));

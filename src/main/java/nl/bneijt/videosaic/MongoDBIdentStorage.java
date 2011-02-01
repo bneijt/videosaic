@@ -39,7 +39,7 @@ public class MongoDBIdentStorage implements IdentStorage {
 	}
 
 	@Override
-	public boolean storeSubIdent(String ident, FrameLocation location) {
+	public boolean storeSubIdent(List<String> ident, FrameLocation location) {
 		BasicDBObject query = new BasicDBObject();
 		query.append("ident", ident);
 
@@ -56,7 +56,7 @@ public class MongoDBIdentStorage implements IdentStorage {
 	}
 
 	@Override
-	public void storeSuperIdent(List<String> idents, FrameLocation location) {
+	public void storeSuperIdent(List< List<String> > idents, FrameLocation location) {
 		LOG.debug("Storring " + idents.size() + " idents");
 		for (int i = 0; i < idents.size(); ++i) {
 			BasicDBObject document = new BasicDBObject();

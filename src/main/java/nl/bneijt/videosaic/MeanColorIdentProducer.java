@@ -2,6 +2,7 @@ package nl.bneijt.videosaic;
 
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
+import java.util.List;
 
 public class MeanColorIdentProducer implements IdentProducer {
 	public static long minValue(long[] numbers){  
@@ -10,7 +11,7 @@ public class MeanColorIdentProducer implements IdentProducer {
 	}  
 
 	@Override
-    public String identify(BufferedImage i){
+    public List<String> identify(BufferedImage i) {
     	
         //Split the image into 4 quadrants [a b; c d]
     	assert(i != null);
@@ -33,8 +34,16 @@ public class MeanColorIdentProducer implements IdentProducer {
     	sum[0] = sum[0] / (w*h);
     	sum[1] = sum[1] / (w*h);
     	sum[2] = sum[2] / (w*h);
-    	long min = minValue(sum);
-    	return String.format("%d.%d.%d", sum[0] - min, sum[1] - min, sum[2] - min);
+    	final long min = minValue(sum);
+    	sum[0] -= min;
+    	sum[1] -= min;
+    	sum[2] -= min;
+    	String[] ident = {
+    			String.format("%d", sum[0]),
+    			String.format("%d", sum[1]),
+    			String.format("%d", sum[2])
+    	};
+    	return Arrays.asList(ident);
 	}
 
 

@@ -2,6 +2,7 @@ package nl.bneijt.videosaic;
 
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
+import java.util.List;
 
 public class MeanLevelIdentProducer implements IdentProducer {
 
@@ -16,12 +17,17 @@ public class MeanLevelIdentProducer implements IdentProducer {
 		return numbers[0];  
 	}  
 	@Override
-	public String identify(BufferedImage img) {
+	public List<String> identify(BufferedImage img) {
 		int[] levels = meanIdentProducer.quadrantMeans(img);
 		
 		int min = minValue(levels);
-		
-        return (levels[0] - min) + "." + (levels[1] - min) + "." + (levels[2] - min) + "." + (levels[3] - min);
+		String[] l = {
+				String.format("%d", levels[0] - min),
+				String.format("%d", levels[1] - min),
+				String.format("%d", levels[2] - min),
+				String.format("%d", levels[3] - min),
+		};
+        return  Arrays.asList(l);
 	}
 
 }
