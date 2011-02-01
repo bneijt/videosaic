@@ -1,5 +1,6 @@
 package nl.bneijt.videosaic;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -13,9 +14,12 @@ public class MemoryIdentStorage implements IdentStorage {
 	}
 	
 	private List<Item> storage;
-	
+	public MemoryIdentStorage() {
+		storage = new ArrayList<Item>();
+	}
 	@Override
 	public FrameLocation bestMatchFor(final List<String> ident) {
+		assert(storage.size() > 0);
 		Collections.sort(storage,
         new Comparator<Item>()
         {
