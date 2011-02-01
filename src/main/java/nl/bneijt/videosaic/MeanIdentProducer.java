@@ -15,17 +15,28 @@ class MeanIdentProducer implements IdentProducer
     */
     public List<String> identify(BufferedImage i)
     {
-    	int[] levels = this.quadrantMeans(i);
+    	int[] levels = MeanIdentProducer.quadrantMeans(i);
     	String[] s = {
-    				String.format("%d", levels[0]),
-    				String.format("%d", levels[1]),
-    				String.format("%d", levels[2]),
-    				String.format("%d", levels[3]),
+    				String.valueOf(levels[0]),
+    				String.valueOf(levels[1]),
+    				String.valueOf(levels[2]),
+    				String.valueOf(levels[3]),
     		};
     	//Return the value as a string
         return Arrays.asList(s);
     }
-    public int[] quadrantMeans(BufferedImage i) {
+    static public BufferedImage[] quadrants(BufferedImage i)
+    {
+    	int w = i.getWidth() / 2;
+    	int h = i.getHeight() / 2;
+    	BufferedImage a = i.getSubimage(0, 0, w, h);
+    	BufferedImage b = i.getSubimage(w, 0, w, h);
+    	BufferedImage c = i.getSubimage(0, h, w, h);
+    	BufferedImage d = i.getSubimage(w, h, w, h);
+    	BufferedImage[] r = {a,b,c,d};
+    	return r;
+    }
+    static public int[] quadrantMeans(BufferedImage i) {
         //Split the image into 4 quadrants [a b; c d]
     	assert(i != null);
     	int w = i.getWidth() / 2;
@@ -44,7 +55,7 @@ class MeanIdentProducer implements IdentProducer
      * @param i
      * @return
      */
-    public int meanIntensity(BufferedImage i)
+    static public int meanIntensity(BufferedImage i)
     {
     	long sum = 0;
     	final int w = i.getWidth();

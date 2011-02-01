@@ -41,8 +41,9 @@ public class DiskFrameStorage {
 					.getAbsolutePath()));
 			return ImageIO.read(storageLocation);
 		}
+		LOG.debug("Returning black");
 		// Fall back: return black image
-		return new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+		return new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
 	}
 
@@ -58,10 +59,14 @@ public class DiskFrameStorage {
 	public void storeFrame(BufferedImage image, FrameLocation location)
 			throws IOException {
 		File storageLocation = storageLocation(location);
-		LOG.debug(String.format("Translated %s into file path %s", location
-				.toString(), storageLocation.getAbsolutePath()));
+		//LOG.debug(String.format("Translated %s into file path %s", location
+		//		.toString(), storageLocation.getAbsolutePath()));
 		FileUtils.forceMkdir(storageLocation.getParentFile());
 
+		//Never overwrite
+		if(storageLocation.exists())
+			return;
+		
 		// Scale to fit if needed
 		if (image.getWidth() != width || image.getHeight() != height) {
 			BufferedImage scaledImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);

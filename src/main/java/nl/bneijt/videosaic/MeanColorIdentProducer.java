@@ -5,15 +5,12 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MeanColorIdentProducer implements IdentProducer {
-	public static long minValue(long[] numbers){  
-		Arrays.sort(numbers);  
+	public static int minValue(int[] numbers){  
+		Arrays.sort(numbers);
 		return numbers[0];  
 	}  
-
-	@Override
-    public List<String> identify(BufferedImage i) {
-    	
-        //Split the image into 4 quadrants [a b; c d]
+	static public int[] meanRGB(BufferedImage i)
+	{
     	assert(i != null);
     	long sum[] = {0,0,0};
     	final int w = i.getWidth();
@@ -34,7 +31,15 @@ public class MeanColorIdentProducer implements IdentProducer {
     	sum[0] = sum[0] / (w*h);
     	sum[1] = sum[1] / (w*h);
     	sum[2] = sum[2] / (w*h);
-    	final long min = minValue(sum);
+    	int[] r = {(int) sum[0], (int) sum[1], (int) sum[2]};
+		return r;
+	}
+	@Override
+    public List<String> identify(BufferedImage i) {
+    	
+        //Split the image into 4 quadrants [a b; c d]
+    	int[] sum = MeanColorIdentProducer.meanRGB(i);
+    	final int min = MeanColorIdentProducer.minValue(sum);
     	sum[0] -= min;
     	sum[1] -= min;
     	sum[2] -= min;

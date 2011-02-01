@@ -37,6 +37,8 @@ class App {
 	static final int HEIGHT = 240;
 
 	static final Logger LOG = Logger.getLogger(App.class);
+	static final DiskFrameStorage frameStorage = new DiskFrameStorage(WIDTH
+			/ N_TILES_PER_SIDE, HEIGHT / N_TILES_PER_SIDE);
 
 	public static void main(String args[]) throws InterruptedException,
 			MongoException, IOException {
@@ -47,6 +49,7 @@ class App {
 		options.addOption("v", false, "Return version information and exit");
 		options.addOption("s", "sub", true, "Add video for sub frames");
 		options.addOption("S", "super", true, "Add video for super frames");
+		options.addOption("i", "identify", true, "Identify a single image");
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = null;
 		try {
@@ -60,7 +63,15 @@ class App {
 			System.out.println("Version... hmm....");
 			System.exit(0);
 		}
-
+		if(cmd.getArgs().length > 0)
+		{
+			System.out.println("Found unparsed arguments, exitting");
+			System.out.println("Arguments where: " + cmd.getArgList());
+			System.exit(1);
+			
+		}
+		
+		
 		Function<String, File> fileCreator = new Function<String, File>() {
 			@Override
 			public File apply(final String name) {
@@ -70,12 +81,14 @@ class App {
 
 		List<File> subFiles = Lists.transform(cmdList(cmd, "s"), fileCreator);
 		List<File> superFiles = Lists.transform(cmdList(cmd, "S"), fileCreator);
+		List<File> identFiles = Lists.transform(cmdList(cmd, "i"), fileCreator);
 		System.out.println("Sub: " + subFiles.toString());
 		System.out.println("Super: " + superFiles.toString());
+		System.out.println("Identify: " + identFiles.toString());
 		System.out.println("Rest: " + cmd.getArgList().toString());
 		
 		IdentStorage identStorage = new MemoryIdentStorage();
-		IdentProducer identifier = new MeanLevelIdentProducer();
+		IdentProducer identifier = new LargeIdentProducer();
 
 		for (File targetFile : subFiles) {
 			BlockingQueue<Frame> queue = frameQueue(targetFile);
@@ -89,6 +102,8 @@ class App {
 						.frameNumber(), ident.toString()));
 				identStorage.storeSubIdent(ident, location);
 
+				//Store sub-frame on disk
+				frameStorage.storeFrame(f, location);
 				// Next frame
 				f = queue.poll(2, TimeUnit.SECONDS);// TODO UGLY CODE!
 			}
@@ -117,14 +132,20 @@ class App {
 
 				// Collapse match into file on disk
 				BufferedImage outputFrame = generateFrame(locations);
-				File outputFile = new File(String.format("/tmp/image_%d.png", f
-						.frameNumber()));
+				File outputFile = new File(String.format("/tmp/image_%05d.png", f.frameNumber()));
 				LOG.debug(String.format("Outputting to %s", outputFile
 						.toString()));
 				ImageIO.write(outputFrame, "png", outputFile);
+				
+				// Next frame
+				f = queue.poll(2, TimeUnit.SECONDS);// TODO UGLY CODE!
 			}
 		}
 
+		for(File identify: identFiles){
+			BufferedImage img = ImageIO.read(identify);
+			System.out.println(String.format("%s:\t%s", identify.getName(), identifier.identify(img)));
+		}
 	}
 
 	/**
@@ -145,8 +166,6 @@ class App {
 	private static BufferedImage generateFrame(
 			ArrayList<FrameLocation> subFrames) throws InterruptedException,
 			IOException {
-		DiskFrameStorage frameStorage = new DiskFrameStorage(WIDTH
-				/ N_TILES_PER_SIDE, HEIGHT / N_TILES_PER_SIDE);
 		assert (subFrames.size() == N_TILES_PER_SIDE * N_TILES_PER_SIDE);
 		// Collapse all the sub-frames of the current frame into it's
 		// parts.
@@ -167,10 +186,10 @@ class App {
 			// Store the subframe in the bufferedImage
 			assert (x < outputFrame.getWidth());
 			assert (y < outputFrame.getHeight());
-			LOG.debug(String.format("Putting sub frame at %d,%d", x, y));
+			//LOG.debug(String.format("Putting sub frame at %d,%d", x, y));
 			outputGraphics.drawImage(scaledSubframe, x, y, null);
-
 		}
+		outputGraphics.dispose();
 		return outputFrame;
 	}
 
