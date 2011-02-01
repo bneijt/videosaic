@@ -2,22 +2,28 @@ package nl.bneijt.videosaic;
 
 import java.util.List;
 
+/**
+ * IdentStorage is both a storage for identifying features of the sub-frames as a matcher for the matching of the super frame identities.
+ * 
+ * Probably want DI of a matcher/search algorithm later on.
+ * 
+ * @author A. Bram Neijt <bneijt@gmail.com>
+ *
+ */
 public interface IdentStorage {
 	/**
-	 * Store the super ident. Any super ident which matches will be stored after this
-	 * @param ident
-	 * @param location
-	 */
-	public void storeSuperIdent(List< List<String> > idents, FrameLocation location);
-	/**
-	 *  Try to store the sub ident in the datastore: this will simply connect the location to a superident if it can find one.
+	 *  Store the sub ident for later matching
 	 * @param ident
 	 * @param location
 	 * @return Whether or not the frame was stored.
 	 */
-	public boolean storeSubIdent(List<String> ident, FrameLocation location);
-	public String information();
-	public List<FrameLocation> loadSubFrames(FrameLocation location);
+	public void storeSubIdent(List<String> ident, FrameLocation location);
+	/**
+	 * Find the best matching framelocation for the given identity
+	 * @param ident
+	 * @return
+	 */
+	public FrameLocation bestMatchFor(List<String> ident);
 	public void clear();
 
 }

@@ -10,7 +10,6 @@ public class ZeroIdentProducer implements IdentProducer {
 	@Override
 	public List<String> identify(BufferedImage img) {
 		return Lists.newArrayList("0", "0");
-
 	}
 
 }

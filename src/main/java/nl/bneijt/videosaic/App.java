@@ -1,7 +1,6 @@
 package nl.bneijt.videosaic;
 
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -23,15 +22,21 @@ import org.apache.log4j.Logger;
 
 import com.mongodb.MongoException;
 
-import nl.bneijt.videosaic.FrameLocation;
-import nl.bneijt.videosaic.Frame;
-
+/**
+ * The main application. Currently way to large.
+ * 
+ * @author A. Bram Neijt <bneijt@gmail.com>
+ * 
+ */
 class App {
+	static final int N_TILES_PER_SIDE = 10;
+	static final int WIDTH = 320;
+	static final int HEIGHT = 240;
+	
 	static final Logger LOG = Logger.getLogger(App.class);
 
 	public static void main(String args[]) throws InterruptedException,
 			MongoException, IOException {
-		final int nTilesPerSide = 10;
 
 		Options options = new Options();
 
@@ -50,11 +55,10 @@ class App {
 			System.out.println("Version... hmm....");
 			System.exit(0);
 		}
-		if (cmd.getArgList().size() < 1) {
-			System.out.println("No enough arguments given");
-			System.out.printf("Usage: %s <sub|super|store> <input file>",
-					args[0]);
-			System.exit(0);
+		if (cmd.getArgList().size() < 2) {
+			System.out.println("Not enough arguments given");
+			System.out.println("Usage: videosaic <sub|super|store> <input file>");
+			System.exit(1);
 		}
 
 		ArrayList<String> fileArguments = new ArrayList<String>();
@@ -74,137 +78,106 @@ class App {
 
 		System.out.printf("Command '%s'\n", command);
 		System.out.printf("Files: %s\n", files.toString());
-		IdentStorage identStorage = new MongoDBIdentStorage();
+		IdentStorage identStorage = new MemoryIdentStorage();
 		IdentProducer identifier = new MeanLevelIdentProducer();
-		if (command.equals("super")) {
-			File targetFile = files.get(0);
-			BlockingQueue<Frame> queue = new SynchronousQueue<Frame>();
-			FrameGenerator fg = new FrameGenerator(queue, targetFile);
-			fg.run();
-			Frame f = queue.poll(10, TimeUnit.SECONDS);
-
-			while (f != null) {
-				System.out.println(String.format("Frame number %d: %dx%d", f
-						.frameNumber(), f.getWidth(), f.getHeight()));
-				FrameLocation location = new FrameLocation(targetFile
-						.getAbsolutePath(), f.frameNumber());
-				// Create idents for each of the pieces of the puzzel
-				int w = f.getWidth() / nTilesPerSide;
-				int h = f.getHeight() / nTilesPerSide;
-				ArrayList< List<String> > idents = new ArrayList< List<String> >();
-				for (int xOffset = 0; xOffset < f.getWidth(); xOffset += w)
-					for (int yOffset = 0; yOffset < f.getHeight(); yOffset += h) {
-						List<String> ident = identifier.identify(f.getSubimage(
-								xOffset, yOffset, w, h));
-						idents.add(ident);
-					}
-				identStorage.storeSuperIdent(idents, location);
-				f = queue.poll(2, TimeUnit.SECONDS); // TODO UGLY CODE!!
-			}
-			// Load frame idents and see if they are in the database
-
-		} else if (command.equals("sub")) {
-			LOG.debug("Entering command: " + command);
-			DiskFrameStorage frameStorage = new DiskFrameStorage();
-			// Load frame idents as targets into the database (documents)
-			// Create index of output movie
-			File targetFile = files.get(0);
-			BlockingQueue<Frame> queue = new SynchronousQueue<Frame>();
-			FrameGenerator fg = new FrameGenerator(queue, targetFile);
-			fg.run();
-			Frame f = queue.poll(10, TimeUnit.SECONDS);
-			while (f != null) {
-				FrameLocation location = new FrameLocation(targetFile
-						.getAbsolutePath(), f.frameNumber());
-				List<String> ident = identifier.identify(f);
-
-				System.out.println(String.format("Frame number %d ident %s", f
-						.frameNumber(), ident));
-
-				boolean stored = identStorage.storeSubIdent(ident, location);
-				// Store the thumbnail on disk, frame store is born!
-				if (stored)
-					frameStorage.storeFrame(f.getScaledInstance(
-							320 / nTilesPerSide, 240 / nTilesPerSide,
-							Image.SCALE_SMOOTH), location);
-
-				f = queue.poll(2, TimeUnit.SECONDS);// TODO UGLY CODE!
-			}
-			// Load frame idents and see if they are in the database
-		} else if (command.equals("info")) {
-			// Show general storage information
-			System.out.println(identStorage.information());
-		} else if (command.equals("clear")) {
-			identStorage.clear();
-		} else if (command.equals("collapse")) {
-			// Enumerate trough super frames and choose an output path from the
-			// database
-			// Each super frame should have an collection of sub frames ready in
-			// the document
-			// Target video is a given file
-			DiskFrameStorage frameStorage = new DiskFrameStorage();
-			File targetFile = files.get(0);
-			for (int frameNumber = 0;; ++frameNumber) {
-				FrameLocation location = new FrameLocation(targetFile
-						.getAbsolutePath(), frameNumber);
-				// Find a frame and all it's sub-frames
-				List<FrameLocation> subframes = identStorage
-						.loadSubFrames(location);
-				LOG.debug(String
-						.format("Found %d sub frames", subframes.size()));
-				if (subframes.size() == 0)
-					break;
-				// Collapse all the sub-frames of the current frame into it's
-				// parts.
-				// Use a default of black if the frame is missing
-				BufferedImage outputFrame = new BufferedImage(320, 240,
-						BufferedImage.TYPE_INT_RGB);
-				Graphics2D outputGraphics = outputFrame.createGraphics();
-				for (int i = 0; i < subframes.size(); ++i) {
-					FrameLocation fl = subframes.get(i);
-					LOG.debug(String.format("Loading subimage %d from %s", i,
-							fl.toString()));
-					// Load subframe as buffered image
-					BufferedImage subframe = frameStorage.loadFrame(fl);
-					// Scale to fit
-					int tileWidth = 320 / nTilesPerSide;
-					int tileHeight = 240 / nTilesPerSide;
-					Image scaledSubframe = subframe.getScaledInstance(
-							tileWidth, tileHeight, Image.SCALE_SMOOTH);
-					int x = tileWidth * (i % nTilesPerSide);
-					int y = tileHeight * (i / nTilesPerSide);
-					// Store the subframe in the bufferedImage
-					assert (x < outputFrame.getWidth());
-					assert (y < outputFrame.getHeight());
-					// Paste the subimage
-					LOG
-							.debug(String.format("Putting sub frame at %d,%d",
-									x, y));
-					outputGraphics.drawImage(scaledSubframe, x, y, null);
-
-				}
-				ImageIO.write(outputFrame, "png", new File(String.format(
-						"/tmp/image_%d.png", frameNumber)));
-			}
-
-		} else if (command.equals("dump")) {
-			// /Output the frame idents to stdout
-			LOG.debug("Entering command: " + command);
-			// Load frame idents as targets into the database (documents)
-			// Create index of output movie
-			BlockingQueue<Frame> queue = new SynchronousQueue<Frame>();
-			for (File targetFile : files) {
-				FrameGenerator fg = new FrameGenerator(queue, targetFile);
-				fg.run();
+		if (command.equals("sub")) {
+			LOG.debug("Storing sub-idents");
+			for(File targetFile : files)
+			{
+				BlockingQueue<Frame> queue = frameQueue(targetFile);
 				Frame f = queue.poll(10, TimeUnit.SECONDS);
 				while (f != null) {
-					System.out.println(identifier.identify(f));
+					FrameLocation location = new FrameLocation(targetFile
+							.getAbsolutePath(), f.frameNumber());
+					List<String> ident = identifier.identify(f);
+
+					System.out.println(String.format("Frame number %d ident %s", f
+							.frameNumber(), ident.toString()));
+					identStorage.storeSubIdent(ident, location);
+					
+					//Next frame
 					f = queue.poll(2, TimeUnit.SECONDS);// TODO UGLY CODE!
 				}
+				
 			}
+
+		} else if (command.equals("super")) {
+			for(File targetFile: files)
+			{
+				BlockingQueue<Frame> queue = frameQueue(targetFile);
+				Frame f = queue.poll(10, TimeUnit.SECONDS);
+
+				while (f != null) {
+					FrameLocation location = new FrameLocation(targetFile
+							.getAbsolutePath(), f.frameNumber());
+					LOG.debug("Starting match for: " + location.toString());
+					// Create idents for each piece of the puzzel, match to a good location
+					int w = f.getWidth() / N_TILES_PER_SIDE;
+					int h = f.getHeight() / N_TILES_PER_SIDE;
+					ArrayList< FrameLocation > locations = new ArrayList< FrameLocation >();
+					for (int xOffset = 0; xOffset < f.getWidth(); xOffset += w)
+						for (int yOffset = 0; yOffset < f.getHeight(); yOffset += h) {
+							List<String> ident = identifier.identify(f.getSubimage(
+									xOffset, yOffset, w, h));
+							locations.add(identStorage.bestMatchFor(ident));
+						}
+
+					//Collapse match into file on disk
+					BufferedImage outputFrame = generateFrame(locations);
+					File outputFile = new File(String.format(
+							"/tmp/image_%d.png", f.frameNumber()));
+					LOG.debug(String.format("Outputting to %s", outputFile.toString()));
+					ImageIO.write(outputFrame, "png", outputFile);
+				}
+				
+			}
+
+		} else if (command.equals("clear")) {
+			identStorage.clear();
 		} else {
-			System.out.println("command - " + command);
-		}
+			System.out.println("Unknown command: " + command);
+			System.exit(1);
+			}
+
+	}
+
+	private static BufferedImage generateFrame(
+			ArrayList<FrameLocation> subFrames) throws InterruptedException, IOException {
+		DiskFrameStorage frameStorage = new DiskFrameStorage(WIDTH / N_TILES_PER_SIDE, HEIGHT / N_TILES_PER_SIDE);
+		assert(subFrames.size() == N_TILES_PER_SIDE * N_TILES_PER_SIDE);
+		// Collapse all the sub-frames of the current frame into it's
+			// parts.
+			// Use a default of black if the frame is missing
+			BufferedImage outputFrame = new BufferedImage(WIDTH, HEIGHT,
+					BufferedImage.TYPE_INT_RGB);
+			Graphics2D outputGraphics = outputFrame.createGraphics();
+			for (int i = 0; i < subFrames.size(); ++i) {
+				FrameLocation fl = subFrames.get(i);
+				LOG.debug(String.format("Loading subimage %d from %s", i,
+						fl.toString()));
+				BufferedImage scaledSubframe = frameStorage.loadFrame(fl);
+				// Scale to fit
+				int tileWidth = WIDTH / N_TILES_PER_SIDE;
+				int tileHeight = HEIGHT / N_TILES_PER_SIDE;
+				int x = tileWidth * (i % N_TILES_PER_SIDE);
+				int y = tileHeight * (i / N_TILES_PER_SIDE);
+				// Store the subframe in the bufferedImage
+				assert (x < outputFrame.getWidth());
+				assert (y < outputFrame.getHeight());
+				LOG
+						.debug(String.format("Putting sub frame at %d,%d",
+								x, y));
+				outputGraphics.drawImage(scaledSubframe, x, y, null);
+
+			}
+			return outputFrame;
+	}
+
+	private static BlockingQueue<Frame> frameQueue(File targetFile) {
+		BlockingQueue<Frame> queue = new SynchronousQueue<Frame>();
+		FrameGenerator fg = new FrameGenerator(queue, targetFile);
+		fg.run();
+		return queue;
 
 	}
 
