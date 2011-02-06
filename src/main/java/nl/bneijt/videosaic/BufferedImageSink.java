@@ -5,6 +5,7 @@ package nl.bneijt.videosaic;
  http://groups.google.com/group/gstreamer-java/browse_thread/thread/fc0f85def933867c
  */
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.nio.IntBuffer;
 import java.util.concurrent.BlockingQueue;
 
@@ -31,9 +32,10 @@ class BufferedImageSink implements RGBDataSink.Listener {
 	private long frameNumber = 0;
 
 	public void rgbFrame(int w, int h, IntBuffer rgbPixels) {
-		Frame frame = new Frame(w, h, BufferedImage.TYPE_INT_ARGB,
+		Frame frame = new Frame(w, h, BufferedImage.TYPE_INT_BGR, //TODO fix this using something smart
 				frameNumber++);
-		frame.setRGB(0, 0, w, h, rgbPixels.array(), 0, w);
+		int[] pixels = ((DataBufferInt)frame.getRaster().getDataBuffer()).getData();
+        rgbPixels.get(pixels, 0, w * h);
 		try {
 			queue.put(frame);
 		} catch (java.lang.InterruptedException e1) {

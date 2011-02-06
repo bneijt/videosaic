@@ -69,9 +69,9 @@ class MeanIdentProducer implements IdentProducer
     		    int green = (pixel >> 8) & 0xff;
     		    int blue = (pixel) & 0xff;
 
-    			sum += red + green + blue;
+    			sum += (red + green + blue) / 3;
     		}
-    	return (int)(sum / (3 * w * h)); 
+    	return (int) (sum / (w * h)); 
     }
 }
 

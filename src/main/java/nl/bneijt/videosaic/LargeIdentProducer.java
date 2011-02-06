@@ -4,9 +4,12 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
+
 /**
  * Generate a large vector of almost uselesss bug ordered features
- * 
+ * TODO Re-order feature index by growing variance!
  * @author A. Bram Neijt <bneijt@gmail.com>
  * 
  */
@@ -82,25 +85,35 @@ public class LargeIdentProducer implements IdentProducer {
 
 		// Build features: intensity, meanColor, quadrantMeans,
 		List<String> features = new ArrayList<String>();
-		features.add(String.valueOf(hue / 50));
-		features.add(String.valueOf(hue / 25));
-		features.add(String.valueOf(intensity / 50));
+		features.add(reversedBinary(hue));
+		features.add(reversedBinary(intensity));
+		if (reversedBinary(intensity).length() > 10)
+			System.out.println("Converting " + intensity + " resulted in " + reversedBinary(intensity));
 		//features.add(String.valueOf(intensity));
 		//features.add(String.valueOf(hue));
 
 		//features.add(String.valueOf(intensity / 50)); //Split up the intensity value into [0,1,2]
 
-		features.add(String.valueOf(intensity)); //Split up the intensity value into [0,1,2]
+		//features.add(String.valueOf(intensity)); //Split up the intensity value into [0,1,2]
 		//features.add(String.valueOf(meanHSV[2]));
 		//features.add(String.valueOf(meanHSV[1])); // Who cares for saturation, I
 													// don't
 		for (int i : levels)
-			features.add(String.valueOf(i / 50));
+			features.add(reversedBinary(i));
 
 
 		//for (int i : levels)
 		//	features.add(String.valueOf(i));
 		return features;
+	}
+
+	/**
+	 * Return the reversed binary string notation of the interger value
+	 * @param hue
+	 * @return
+	 */
+	private String reversedBinary(final int value) {
+		return StringUtils.reverse(Integer.toBinaryString(value));
 	}
 
 }

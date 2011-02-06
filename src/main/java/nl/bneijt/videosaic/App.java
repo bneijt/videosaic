@@ -88,7 +88,7 @@ class App {
 		System.out.println("Rest: " + cmd.getArgList().toString());
 		
 		IdentStorage identStorage = new MemoryIdentStorage();
-		IdentProducer identifier = new LargeIdentProducer();
+		IdentProducer identifier = new GrayscaleIdentProducer();
 
 		for (File targetFile : subFiles) {
 			BlockingQueue<Frame> queue = frameQueue(targetFile);

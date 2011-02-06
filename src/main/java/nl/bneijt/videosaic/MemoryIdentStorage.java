@@ -1,8 +1,6 @@
 package nl.bneijt.videosaic;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -27,49 +25,47 @@ public class MemoryIdentStorage implements IdentStorage {
 
 	@Override
 	public FrameLocation bestMatchFor(final List<String> ident) {
-		LOG.debug("Find best match for " + ident);
-		
 		assert (storage.size() > 0);
-		Collections.sort(storage, new Comparator<Item>() {
-			/**
-			 * Compare items based on their matching length to the given super ident
-			 * @param a
-			 * @param b
-			 * @return
-			 */
-			public int compare(Item a, Item b) {
-				int aMatchLength = matchLength(a.identity, ident);
-				int bMatchLength = matchLength(b.identity, ident);
-				if(aMatchLength + bMatchLength > 0)
-					return aMatchLength - bMatchLength;
-				int aMatchCount = matchCount(a.identity, ident);
-				int bMatchCount = matchCount(b.identity, ident);
-				return aMatchCount - bMatchCount;
+		Item best = storage.get(0);
+		int bestMatchCount = 0;
+		for (Item i : storage) {
+			int iMatchCount = matchCount(i, ident);
+			if(iMatchCount > bestMatchCount)
+			{
+				best = i;
+				bestMatchCount = iMatchCount;
 			}
-
-			private int matchCount(List<String> a, List<String> b) {
-				int count = 0;
-				for(int i = 0; i < a.size(); ++i)
-					if(a.get(i).equals(b.get(i)))
-						count += 1;
-				return count;
-				
-			}
-
-			private int matchLength(List<String> a, List<String> b) {
-				assert(a.size() == b.size());
-				int i = 0;
-				for(;i < a.size(); ++i)
-					if(! a.get(i).equals(b.get(i)) )
-						break;
-				return i;
-			}
-		});
-		LOG.debug("Head " + storage.subList(0, 10));
-		LOG.debug("Tail " + storage.subList(storage.size() - 10, storage.size()));
-		Item best = storage.get(storage.size() -1);
-		LOG.debug("Found " + best.identity);
+		}
+		LOG.debug("Found " + best.identity + " as best match for " + ident);
 		return best.location;
+	}
+
+	/**
+	 * Return the total length of prefix matches in the elements of the ident and item.identity
+	 * @param item
+	 * @param ident
+	 * @return
+	 */
+	private int matchCount(final Item item, final List<String> ident) {
+		int matchLen = (item.identity.size() < ident.size() ? item.identity.size() : ident.size());
+		int count = 0;
+		for(int i = 0; i < ident.size(); ++i)
+		{
+			count += matchingPrefixLength(item.identity.get(i), ident.get(i));
+		}
+		return count;
+	}
+
+
+	private int matchingPrefixLength(final String a, final String b) {
+		int len = (a.length() < b.length() ? a.length() : b.length());
+		int i = 0;
+		for(; i < len; ++i)
+		{
+			if(a.charAt(i) != b.charAt(i))
+				return i;
+		}
+		return i;
 	}
 
 	@Override
