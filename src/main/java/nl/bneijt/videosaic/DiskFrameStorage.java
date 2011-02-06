@@ -47,14 +47,6 @@ public class DiskFrameStorage {
 
 	}
 
-	static BufferedImage scale(final Image image, final int width, final int height)
-	{
-		BufferedImage scaledImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		Graphics2D graphics2D = scaledImage.createGraphics();
-		graphics2D.drawImage(image, 0, 0, width, height, null);
-		graphics2D.dispose();
-		return scaledImage;
-	}
 	public void storeFrame(Image image, FrameLocation location)
 			throws IOException {
 		BufferedImage bufferedImage = new BufferedImage(image.getWidth(null),

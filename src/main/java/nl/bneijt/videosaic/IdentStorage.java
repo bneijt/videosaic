@@ -1,6 +1,5 @@
 package nl.bneijt.videosaic;
 
-import java.util.List;
 
 /**
  * IdentStorage is both a storage for identifying features of the sub-frames as a matcher for the matching of the super frame identities.
@@ -17,13 +16,13 @@ public interface IdentStorage {
 	 * @param location
 	 * @return Whether or not the frame was stored.
 	 */
-	public void storeSubIdent(List<String> ident, FrameLocation location);
+	public void storeSubIdent(Identity ident, FrameLocation location);
 	/**
 	 * Find the best matching framelocation for the given identity
 	 * @param ident
 	 * @return
 	 */
-	public FrameLocation bestMatchFor(List<String> ident);
+	public FrameLocation bestMatchFor(Identity ident);
 	public void clear();
 
 }

@@ -88,7 +88,7 @@ class App {
 		System.out.println("Rest: " + cmd.getArgList().toString());
 		
 		IdentStorage identStorage = new MemoryIdentStorage();
-		IdentProducer identifier = new GrayscaleIdentProducer();
+		IdentProducer identifier = new RGBIdentProducer();
 
 		for (File targetFile : subFiles) {
 			BlockingQueue<Frame> queue = frameQueue(targetFile);
@@ -96,7 +96,7 @@ class App {
 			while (f != null) {
 				FrameLocation location = new FrameLocation(targetFile
 						.getAbsolutePath(), f.frameNumber());
-				List<String> ident = identifier.identify(f);
+				Identity ident = identifier.identify(f);
 
 				System.out.println(String.format("Frame number %d ident %s", f
 						.frameNumber(), ident.toString()));
@@ -125,7 +125,7 @@ class App {
 				ArrayList<FrameLocation> locations = new ArrayList<FrameLocation>();
 				for (int xOffset = 0; xOffset < f.getWidth(); xOffset += w)
 					for (int yOffset = 0; yOffset < f.getHeight(); yOffset += h) {
-						List<String> ident = identifier.identify(f.getSubimage(
+						Identity ident = identifier.identify(f.getSubimage(
 								xOffset, yOffset, w, h));
 						locations.add(identStorage.bestMatchFor(ident));
 					}

@@ -1,5 +1,6 @@
 
 package nl.bneijt.videosaic;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
 /**
@@ -22,9 +23,20 @@ class Frame extends BufferedImage {
     	valid = true;
         this.frameNumber = frameNumber;
     }
+	BufferedImage scale(final int width, final int height)
+	{
+		return Frame.scale(this, width, height);
+	}
     public long frameNumber()
     {
         return this.frameNumber;
     }
+	public static BufferedImage scale(BufferedImage img, int width, int height) {
+		BufferedImage scaledImage = new BufferedImage(width, height, img.getType());
+		Graphics2D graphics2D = scaledImage.createGraphics();
+		graphics2D.drawImage(img, 0, 0, width, height, null);
+		graphics2D.dispose();
+		return scaledImage;
+	}
 }
 
