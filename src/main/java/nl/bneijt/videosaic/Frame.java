@@ -10,14 +10,14 @@ import java.awt.image.BufferedImage;
  */
 class Frame extends BufferedImage {
     
-    private long frameNumber;
+    private int frameNumber;
 
     public boolean valid;//Hack to notify the end of the queue
 
     public Frame(
         int w, int h,
         int imageType,
-        long frameNumber)
+        int frameNumber)
     {
         super(w, h, imageType);
     	valid = true;
@@ -27,7 +27,7 @@ class Frame extends BufferedImage {
 	{
 		return Frame.scale(this, width, height);
 	}
-    public long frameNumber()
+    public int frameNumber()
     {
         return this.frameNumber;
     }

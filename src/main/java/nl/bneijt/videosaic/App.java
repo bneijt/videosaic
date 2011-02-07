@@ -193,7 +193,7 @@ class App {
 		return outputFrame;
 	}
 
-	private static BlockingQueue<Frame> frameQueue(File targetFile) {
+	public static BlockingQueue<Frame> frameQueue(File targetFile) {
 		BlockingQueue<Frame> queue = new SynchronousQueue<Frame>();
 		FrameGenerator fg = new FrameGenerator(queue, targetFile);
 		fg.run();

@@ -29,7 +29,7 @@ class BufferedImageSink implements RGBDataSink.Listener {
 		this.queue = queue;
 	}
 
-	private long frameNumber = 0;
+	private int frameNumber = 0;
 
 	public void rgbFrame(int w, int h, IntBuffer rgbPixels) {
 		Frame frame = new Frame(w, h, BufferedImage.TYPE_INT_BGR, //TODO fix this using something smart
