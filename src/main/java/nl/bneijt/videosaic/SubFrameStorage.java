@@ -3,9 +3,12 @@ package nl.bneijt.videosaic;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+
+import org.eclipse.jetty.util.log.Log;
 
 /**
  * Utility class to handle allocating and storing a collection of sub-frames.
@@ -15,47 +18,16 @@ import java.util.concurrent.TimeUnit;
  * 
  */
 public class SubFrameStorage {
-	private byte[][] frames; // /Each frame with the last byte being the index
+	private List<byte[]> frames; // /Each frame with the last byte being the index
 	// of the name of the source file in the names
 	// array
 	private final int width;
 	private final int height;
 
-	public SubFrameStorage(List<File> subFiles) throws InterruptedException {
+	public SubFrameStorage() {
 		width = 32;
 		height = 24;
-		System.out.println("Opening superframeserver with " + subFiles);
-		// Load each frame of each file into memory
-		int frameCount = 0;
-		for (File targetFile : subFiles) {
-			// Count frames in a terribly stupid fashion
-			BlockingQueue<Frame> queue = App.frameQueue(targetFile);
-			Frame f = queue.poll(10, TimeUnit.SECONDS);
-			while (f != null) {
-				frameCount = f.frameNumber();
-				f = queue.poll(5, TimeUnit.SECONDS);
-			}
-			frameCount += 1; // Add one for the 0-index of frameNumber
-		}
-		// Allocate
-		frames = new byte[frameCount][];
-		int frameIdx = 0;
-		// Process
-		for (File targetFile : subFiles) {
-			// Start loading frames
-			BlockingQueue<Frame> queue = App.frameQueue(targetFile);
-			Frame f = queue.poll(10, TimeUnit.SECONDS);
-			while (f != null) {
-
-				BufferedImage scaled = Frame.scale(f, width, height);
-				byte[] ident = SubFrameStorage.bytesFromBufferedImage(scaled);
-
-				frames[frameIdx] = ident;
-				frameIdx += 1;
-				// Next frame
-				f = queue.poll(2, TimeUnit.SECONDS);// TODO UGLY CODE!
-			}
-		}
+		frames = new ArrayList<byte[]>();
 	}
 	static public byte[] bytesFromBufferedImage(BufferedImage scaled) {
 		// Create HSB byte array
@@ -77,7 +49,6 @@ public class SubFrameStorage {
 				assert (hsb[0] >= 0);
 				assert (hsb[1] >= 0);
 				assert (hsb[2] >= 0);
-				System.out.println("H" + h + "s"+s+"b"+b);
 				ident[(x + y * width) * 3 + 0] = float2byte(h);
 				ident[(x + y * width) * 3 + 1] = float2byte(s);
 				ident[(x + y * width) * 3 + 2] = float2byte(b);
@@ -101,10 +72,15 @@ public class SubFrameStorage {
 	}
 
 	public byte[] bestMatchFor(byte[] query) {
-		byte[] best = frames[0];
+		if(frames.size() == 0)
+		{
+			Log.warn("NO FRAMES IN STORAGE, RETURNING QUERY");
+			return query;
+		}
+		byte[] best = frames.get(0);
 		long bestDistance = distance(best, query);
 		for (byte[] frame : frames) {
-			long distance = distance(best, query);//TODO Optimize by adding bestDistance ??
+			long distance = distance(frame, query);//TODO Optimize by adding bestDistance ??
 			if(distance < bestDistance)
 			{
 				best = frame;
@@ -129,7 +105,7 @@ public class SubFrameStorage {
 		BufferedImage bi = new BufferedImage(width, height,
 				BufferedImage.TYPE_INT_RGB);
 		if(subFrameBytes.length != width * height * 3)
-			throw new RuntimeException("Wrong size frmae fgiansgd");
+			throw new RuntimeException("Wrong number of sub-frame bytes for width/height combo");
 		for(int pixel = 0; pixel < subFrameBytes.length / 3; ++pixel)
 		{
 			int i = pixel * 3;
@@ -137,8 +113,6 @@ public class SubFrameStorage {
 			float h = byte2float(subFrameBytes[i]);
 			float s = byte2float(subFrameBytes[i + 1]);
 			float b = byte2float(subFrameBytes[i + 2]);
-			System.out.println("BYTE H" + subFrameBytes[i] + "s"+subFrameBytes[i+1]+"b"+subFrameBytes[i+2]);
-			System.out.println("OUT H" + h + "s"+s+"b"+b);
 			int rgb = Color.HSBtoRGB(h, s, b);
 			int x = pixel % width;
 			int y = pixel / width;
@@ -154,6 +128,31 @@ public class SubFrameStorage {
 	private static float byte2float(byte b) {
 		assert(Byte.MIN_VALUE < 0);
 		return (float) ((int) b - (int) Byte.MIN_VALUE) / (float) ((int) Byte.MAX_VALUE - (int) Byte.MIN_VALUE);
+	}
+	public void add(byte[] frame)
+	{
+		frames.add(frame);
+	}
+	public void loadFiles(List<File> subFiles) throws InterruptedException {
+		// Load each frame of each file into memory
+		for (File targetFile : subFiles) {
+			Log.info("Loading " + targetFile);
+			// Start loading frames
+			BlockingQueue<Frame> queue = App.frameQueue(targetFile);
+			Frame f = queue.poll(10, TimeUnit.SECONDS);
+			while (f != null) {
+
+				BufferedImage scaled = Frame.scale(f, width, height);
+				byte[] ident = SubFrameStorage.bytesFromBufferedImage(scaled);
+
+				frames.add(ident);
+				// Next frame
+				f = queue.poll(2, TimeUnit.SECONDS);// TODO UGLY CODE!
+			}
+			Log.info("Done loading " + targetFile);
+		}
+
+		
 	}
 
 }

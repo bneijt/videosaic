@@ -4,6 +4,8 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -16,12 +18,36 @@ import org.apache.log4j.Logger;
 
 public class SubFrameClient {
 	private static final Logger LOG = Logger.getLogger(SubFrameClient.class);
-	private Socket[] sockets;
+	class Peer {
+		public Peer(String hostName, int portNumber) throws UnknownHostException {
+			host = InetAddress.getByName(hostName);
+			port = portNumber;
+		}
+		public Socket openSocket() throws IOException
+		{
+			LOG.info("Connecting to " + host + ":" + port);
+			return new Socket(host, port);
+		}
+		public Socket socket() throws IOException
+		{
+			if(_socket == null || _socket.isClosed())
+			{
+				_socket = openSocket();
+			}
+			return _socket;
+		}
+		private Socket _socket;
+		public final InetAddress host;
+		public final int port;
+	}
+	private Peer[] peers;
 
 	public SubFrameClient(String[] hosts) throws UnknownHostException, IOException {
-		sockets = new Socket[hosts.length];
-		for (int i = 0; i < sockets.length; ++i) {
-			sockets[i] = new Socket(hosts[i], 8080);
+		peers = new Peer[hosts.length];
+		for (int i = 0; i < peers.length; ++i) {
+			String host = hosts[i];
+			int colonIndex = host.indexOf(":") > 0 ? host.indexOf(":") : host.length();
+			peers[i] = new Peer(host.substring(0, colonIndex), Integer.parseInt(host.substring(colonIndex + 1)));
 		}
 
 	}
@@ -66,10 +92,27 @@ public class SubFrameClient {
 		}
 	}
 
-	private byte[] bestMatchFor(byte[] query) {
-		System.err.println("BEST MATCH NOT IMPLEMENTED");
-		return query;
-
+	private byte[] bestMatchFor(byte[] query) throws IOException {
+		if(peers.length == 0)
+			throw new RuntimeException("No hosts left to query");
+		byte[] response = new byte[query.length];
+		SubFrameStorage storage = new SubFrameStorage();
+		for(Peer peer : peers)
+		{
+			Socket s = peer.socket();
+			LOG.debug("Contacting " + s.getRemoteSocketAddress());
+			OutputStream out = s.getOutputStream();
+			out.write(query);
+			out.flush();
+			int read = s.getInputStream().read(response);
+			if(read == response.length)
+			{
+				LOG.info("Got response from " + s.getRemoteSocketAddress());
+				storage.add(response);
+			}
+			s.close();
+		}
+		return storage.bestMatchFor(query);
 	}
 
 }

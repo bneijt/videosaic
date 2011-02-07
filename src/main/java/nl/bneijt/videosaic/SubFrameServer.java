@@ -33,27 +33,49 @@ public class SubFrameServer {
 	private SubFrameStorage storage;
 
 	public SubFrameServer(List<File> subFiles) throws InterruptedException {
-		storage = new SubFrameStorage(subFiles);
+		storage = new SubFrameStorage();
+		storage.loadFiles(subFiles);
 	}
 
 	public void serve() throws IOException {
 
-		final int port = 8080;
-		ServerSocket server = new ServerSocket(port);
+		int port = 8080;
+		ServerSocket server = null;
+		for (port = 8080; port < 9000; port++) {
+			try {
+				server = new ServerSocket(port);
+				LOG.info("Started server at port: " + port);
+				break;
+			} catch (IOException e) {
+			}
+		}
 
-		Socket client;
-		client = server.accept();
+		if (server == null) {
+			LOG.error("Unable to get a port for the server");
+			return;
+		}
+		while (true) {
+			final Socket client = server.accept();
+			// Handle requests in thread
+			LOG.info("Started to serve: " + client.getRemoteSocketAddress());
+			try {
+				InputStream in = client.getInputStream();
+				OutputStream out = client.getOutputStream();
+				byte[] query = storage.block();
+				in.read(query);
+				byte[] best = storage.bestMatchFor(query);
+				LOG.info("Sending response to "
+						+ client.getRemoteSocketAddress());
+				out.write(best);
+				out.flush();
+				out.close();
+				LOG.debug("Socket closed");
+			} catch (IOException e) {
+				LOG.warn("Socket IO Exception for: "
+						+ client.getRemoteSocketAddress());
+			}
 
-		InputStream in = client.getInputStream();
-		OutputStream out = client.getOutputStream();
-		
-		byte[] query = storage.block();
-		in.read(query, 0, query.length);
-		in.close();
-		byte[] best = storage.bestMatchFor(query);
-		out.write(best);
-		out.close();
-		client.close();
+		}
 	}
 
 	public static void main(String[] args) throws InterruptedException,

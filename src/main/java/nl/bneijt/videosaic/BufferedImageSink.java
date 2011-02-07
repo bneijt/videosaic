@@ -32,7 +32,7 @@ class BufferedImageSink implements RGBDataSink.Listener {
 	private int frameNumber = 0;
 
 	public void rgbFrame(int w, int h, IntBuffer rgbPixels) {
-		Frame frame = new Frame(w, h, BufferedImage.TYPE_INT_BGR, //TODO fix this using something smart
+		Frame frame = new Frame(w, h, BufferedImage.TYPE_INT_BGR, //TODO fix this using something smart?
 				frameNumber++);
 		int[] pixels = ((DataBufferInt)frame.getRaster().getDataBuffer()).getData();
         rgbPixels.get(pixels, 0, w * h);
