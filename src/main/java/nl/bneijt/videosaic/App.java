@@ -88,7 +88,7 @@ class App {
 		System.out.println("Rest: " + cmd.getArgList().toString());
 		
 		IdentStorage identStorage = new MemoryIdentStorage();
-		IdentProducer identifier = new RGBIdentProducer();
+		IdentProducer identifier = new HSBIdentProducer();
 
 		for (File targetFile : subFiles) {
 			BlockingQueue<Frame> queue = frameQueue(targetFile);
@@ -123,13 +123,13 @@ class App {
 				int w = f.getWidth() / N_TILES_PER_SIDE;
 				int h = f.getHeight() / N_TILES_PER_SIDE;
 				ArrayList<FrameLocation> locations = new ArrayList<FrameLocation>();
-				for (int xOffset = 0; xOffset < f.getWidth(); xOffset += w)
-					for (int yOffset = 0; yOffset < f.getHeight(); yOffset += h) {
+				for (int yOffset = 0; yOffset < f.getHeight(); yOffset += h) {
+						for (int xOffset = 0; xOffset < f.getWidth(); xOffset += w){
 						Identity ident = identifier.identify(f.getSubimage(
 								xOffset, yOffset, w, h));
 						locations.add(identStorage.bestMatchFor(ident));
 					}
-
+				}
 				// Collapse match into file on disk
 				BufferedImage outputFrame = generateFrame(locations);
 				File outputFile = new File(String.format("/tmp/image_%05d.png", f.frameNumber()));
