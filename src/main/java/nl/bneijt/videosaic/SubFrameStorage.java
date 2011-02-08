@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -64,11 +65,15 @@ public class SubFrameStorage {
 	private static byte float2byte(float f) {
 		assert(Byte.MIN_VALUE < 0);
 		assert(Byte.MAX_VALUE > 0);
-		return new Float(f * (float)(Byte.MAX_VALUE - Byte.MIN_VALUE) + (float)Byte.MIN_VALUE).byteValue();
-		
+		final float range = Byte.MAX_VALUE - Byte.MIN_VALUE;
+		final float val = f * range + (float)Byte.MIN_VALUE;
+		byte r = new Float(val).byteValue();
+		return r;
 	}
 	public byte[] block() {
-		return new byte[width * height * 3];
+		byte[] b = new byte[width * height * 3];
+		Arrays.fill(b, 0, b.length, (byte)0);
+		return b;
 	}
 
 	public byte[] bestMatchFor(byte[] query) {
@@ -79,15 +84,15 @@ public class SubFrameStorage {
 		}
 		byte[] best = frames.get(0);
 		long bestDistance = distance(best, query);
-		for (byte[] frame : frames) {
-			long distance = distance(frame, query);//TODO Optimize by adding bestDistance ??
+		for (byte[] frame : frames)
+		{
+			long distance = distance(frame, query);
 			if(distance < bestDistance)
 			{
 				best = frame;
 				bestDistance = distance;
 			}
 		}
-		//TODO Add logging
 		return best;
 	}
 

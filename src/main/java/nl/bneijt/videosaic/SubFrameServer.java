@@ -2,11 +2,12 @@ package nl.bneijt.videosaic;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -31,7 +32,6 @@ public class SubFrameServer {
 
 	static final Logger LOG = Logger.getLogger(App.class);
 	private SubFrameStorage storage;
-
 	public SubFrameServer(List<File> subFiles) throws InterruptedException {
 		storage = new SubFrameStorage();
 		storage.loadFiles(subFiles);
@@ -54,27 +54,24 @@ public class SubFrameServer {
 			LOG.error("Unable to get a port for the server");
 			return;
 		}
+		HashMap<String, SubFrameRequestHandler> rHandlers = new HashMap<String, SubFrameRequestHandler>();
 		while (true) {
-			final Socket client = server.accept();
-			// Handle requests in thread
-			LOG.info("Started to serve: " + client.getRemoteSocketAddress());
-			try {
-				InputStream in = client.getInputStream();
-				OutputStream out = client.getOutputStream();
-				byte[] query = storage.block();
-				in.read(query);
-				byte[] best = storage.bestMatchFor(query);
-				LOG.info("Sending response to "
-						+ client.getRemoteSocketAddress());
-				out.write(best);
-				out.flush();
-				out.close();
-				LOG.debug("Socket closed");
-			} catch (IOException e) {
-				LOG.warn("Socket IO Exception for: "
-						+ client.getRemoteSocketAddress());
+			Socket client = server.accept();
+			String remoteIP = client.getInetAddress().getHostAddress();
+			for(String rIP : rHandlers.keySet())//TODO Need a keySet copy here?
+			{
+				if(!rHandlers.get(rIP).isAlive())
+					rHandlers.remove(rIP);
 			}
-
+			if(rHandlers.containsKey(remoteIP))
+			{
+				client.close();
+				continue;
+			}
+				// Handle requests in thread
+			SubFrameRequestHandler r = new SubFrameRequestHandler(storage, client);
+			r.run();
+			rHandlers.put(remoteIP, r); 
 		}
 	}
 

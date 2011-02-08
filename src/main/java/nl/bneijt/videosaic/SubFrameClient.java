@@ -4,6 +4,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -18,36 +19,59 @@ import org.apache.log4j.Logger;
 
 public class SubFrameClient {
 	private static final Logger LOG = Logger.getLogger(SubFrameClient.class);
+
 	class Peer {
-		public Peer(String hostName, int portNumber) throws UnknownHostException {
+		public Peer(String hostName, int portNumber)
+				throws UnknownHostException {
 			host = InetAddress.getByName(hostName);
 			port = portNumber;
 		}
-		public Socket openSocket() throws IOException
-		{
+
+		public Socket openSocket() throws IOException {
 			LOG.info("Connecting to " + host + ":" + port);
-			return new Socket(host, port);
+			_socket = new Socket(host, port);
+			return _socket;
 		}
-		public Socket socket() throws IOException
-		{
-			if(_socket == null || _socket.isClosed())
+
+		public Socket socket() throws IOException {
+			if(_socket == null)
+				return openSocket();
+			if(!_socket.isConnected())
 			{
-				_socket = openSocket();
+				_socket.close();
+				return openSocket();
 			}
 			return _socket;
 		}
+
 		private Socket _socket;
 		public final InetAddress host;
 		public final int port;
+		public void close() {
+			if(_socket != null)
+			{
+				try {
+					_socket.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				_socket = null;
+			}
+		}
 	}
+
 	private Peer[] peers;
 
-	public SubFrameClient(String[] hosts) throws UnknownHostException, IOException {
+	public SubFrameClient(String[] hosts) throws UnknownHostException,
+			IOException {
 		peers = new Peer[hosts.length];
 		for (int i = 0; i < peers.length; ++i) {
 			String host = hosts[i];
-			int colonIndex = host.indexOf(":") > 0 ? host.indexOf(":") : host.length();
-			peers[i] = new Peer(host.substring(0, colonIndex), Integer.parseInt(host.substring(colonIndex + 1)));
+			int colonIndex = host.indexOf(":") > 0 ? host.indexOf(":") : host
+					.length();
+			peers[i] = new Peer(host.substring(0, colonIndex), Integer
+					.parseInt(host.substring(colonIndex + 1)));
 		}
 
 	}
@@ -90,27 +114,38 @@ public class SubFrameClient {
 			// Next frame
 			f = queue.poll(2, TimeUnit.SECONDS);// TODO UGLY CODE!
 		}
+		sfc.close();
 	}
 
-	private byte[] bestMatchFor(byte[] query) throws IOException {
-		if(peers.length == 0)
+	private void close() {
+		for(Peer p : peers)
+			p.close();
+	}
+
+	private byte[] bestMatchFor(byte[] query) {
+		if (peers.length == 0)
 			throw new RuntimeException("No hosts left to query");
 		byte[] response = new byte[query.length];
 		SubFrameStorage storage = new SubFrameStorage();
-		for(Peer peer : peers)
-		{
-			Socket s = peer.socket();
-			LOG.debug("Contacting " + s.getRemoteSocketAddress());
-			OutputStream out = s.getOutputStream();
-			out.write(query);
-			out.flush();
-			int read = s.getInputStream().read(response);
-			if(read == response.length)
-			{
-				LOG.info("Got response from " + s.getRemoteSocketAddress());
+		for (Peer peer : peers) {
+			try {
+
+				Socket s = peer.socket();
+				LOG.debug("Contacting " + s.getRemoteSocketAddress());
+				OutputStream out = s.getOutputStream();
+				out.write(query);
+				out.flush();
+				InputStream in = s.getInputStream();
+				int read = in.read(response);
+				if (read != response.length) {
+					LOG.error("Could not get full response from " + s.getRemoteSocketAddress());
+					s.close();
+					continue;
+				}
 				storage.add(response);
+			} catch (IOException e) {
+
 			}
-			s.close();
 		}
 		return storage.bestMatchFor(query);
 	}

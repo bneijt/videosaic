@@ -32,6 +32,8 @@ class Frame extends BufferedImage {
         return this.frameNumber;
     }
 	public static BufferedImage scale(BufferedImage img, int width, int height) {
+		if(img.getWidth() == width && img.getHeight() == height)
+			return img;
 		BufferedImage scaledImage = new BufferedImage(width, height, img.getType());
 		Graphics2D graphics2D = scaledImage.createGraphics();
 		graphics2D.drawImage(img, 0, 0, width, height, null);
