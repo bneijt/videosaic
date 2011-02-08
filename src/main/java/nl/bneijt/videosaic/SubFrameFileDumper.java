@@ -17,7 +17,6 @@ public class SubFrameFileDumper {
 			SubFrameStorage storage = new SubFrameStorage();
 			storage.loadFile(new File(arg));
 			storage.dumpFile(new File(arg + ".bin"));
-			
 		}
 	}
 }

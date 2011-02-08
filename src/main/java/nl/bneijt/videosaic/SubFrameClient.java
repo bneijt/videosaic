@@ -9,7 +9,9 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -21,23 +23,26 @@ public class SubFrameClient {
 	private static final Logger LOG = Logger.getLogger(SubFrameClient.class);
 
 	class Peer {
+		public int connectCount;
+
 		public Peer(String hostName, int portNumber)
 				throws UnknownHostException {
 			host = InetAddress.getByName(hostName);
 			port = portNumber;
+			connectCount = 0;
 		}
 
 		public Socket openSocket() throws IOException {
 			LOG.info("Connecting to " + host + ":" + port);
 			_socket = new Socket(host, port);
+			connectCount++;
 			return _socket;
 		}
 
 		public Socket socket() throws IOException {
-			if(_socket == null)
+			if (_socket == null)
 				return openSocket();
-			if(!_socket.isConnected())
-			{
+			if (!_socket.isConnected()) {
 				_socket.close();
 				return openSocket();
 			}
@@ -47,9 +52,9 @@ public class SubFrameClient {
 		private Socket _socket;
 		public final InetAddress host;
 		public final int port;
+
 		public void close() {
-			if(_socket != null)
-			{
+			if (_socket != null) {
 				try {
 					_socket.close();
 				} catch (IOException e) {
@@ -118,33 +123,49 @@ public class SubFrameClient {
 	}
 
 	private void close() {
-		for(Peer p : peers)
+		for (Peer p : peers)
 			p.close();
 	}
 
 	private byte[] bestMatchFor(byte[] query) {
 		if (peers.length == 0)
 			throw new RuntimeException("No hosts left to query");
-		byte[] response = new byte[query.length];
 		SubFrameStorage storage = new SubFrameStorage();
+		List<InputStream> ins = new ArrayList<InputStream>();
+		// Fire queries
 		for (Peer peer : peers) {
-			try {
+			if (peer.connectCount > 10)
+				continue; // Skip hosts that fail to often
 
-				Socket s = peer.socket();
-				LOG.debug("Contacting " + s.getRemoteSocketAddress());
-				OutputStream out = s.getOutputStream();
-				out.write(query);
-				out.flush();
-				InputStream in = s.getInputStream();
-				int read = in.read(response);
+				Socket s;
+				try {
+					s = peer.socket();
+					LOG.debug("Contacting " + s.getRemoteSocketAddress());
+					OutputStream out = s.getOutputStream();
+					out.write(query);
+					out.flush();
+					ins.add(s.getInputStream());
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+		}
+		// Collect responses
+		for (InputStream in : ins) {
+			byte[] response = new byte[query.length];
+			int read;
+			try {
+				read = in.read(response);
 				if (read != response.length) {
-					LOG.error("Could not get full response from " + s.getRemoteSocketAddress());
-					s.close();
+					LOG.error("Could not get full response, throwing away result");
 					continue;
 				}
+				LOG.info("Storing response");
 				storage.add(response);
 			} catch (IOException e) {
-
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 		return storage.bestMatchFor(query);

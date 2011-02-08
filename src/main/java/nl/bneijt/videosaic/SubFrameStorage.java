@@ -3,6 +3,8 @@ package nl.bneijt.videosaic;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.log4j.Logger;
 import org.eclipse.jetty.util.log.Log;
 
 /**
@@ -27,6 +30,8 @@ public class SubFrameStorage {
 	private final int width;
 	private final int height;
 
+	static final Logger LOG = Logger.getLogger(SubFrameStorage.class);
+	
 	public SubFrameStorage() {
 		width = 32;
 		height = 24;
@@ -81,8 +86,8 @@ public class SubFrameStorage {
 	public byte[] bestMatchFor(byte[] query) {
 		if(frames.size() == 0)
 		{
-			Log.warn("NO FRAMES IN STORAGE, RETURNING QUERY");
-			return query;
+			Log.warn("NO FRAMES IN STORAGE, RETURNING EMPTY");
+			return this.block();
 		}
 		byte[] best = frames.get(0);
 		long bestDistance = distance(best, query);
@@ -147,7 +152,29 @@ public class SubFrameStorage {
 		}
 	}
 	public void loadFile(File targetFile) throws InterruptedException {
-		Log.info("Loading " + targetFile);
+		if(targetFile.getName().endsWith(".bin"))
+		{
+			LOG.info("Loading binary file: " + targetFile);
+			try {
+				FileInputStream in = new FileInputStream(targetFile);
+				while(true)
+				{
+					byte[] block = this.block();
+					int read = in.read(block);
+					if(read < block.length)
+						break;
+					frames.add(block);
+				}
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return;
+		}
+		LOG.info("Loading video: " + targetFile);
 		// Start loading frames
 		BlockingQueue<Frame> queue = App.frameQueue(targetFile);
 		Frame f = queue.poll(10, TimeUnit.SECONDS);
@@ -168,9 +195,8 @@ public class SubFrameStorage {
 		{
 			f.write(frame);
 		}
-		// TODO Auto-generated method stub
-		throw new RuntimeException("Bram has not implemented this method yet.");
-		
+		f.flush();
+		f.close();
 	}
 
 }
