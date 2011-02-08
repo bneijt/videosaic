@@ -3,6 +3,8 @@ package nl.bneijt.videosaic;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -141,22 +143,33 @@ public class SubFrameStorage {
 	public void loadFiles(List<File> subFiles) throws InterruptedException {
 		// Load each frame of each file into memory
 		for (File targetFile : subFiles) {
-			Log.info("Loading " + targetFile);
-			// Start loading frames
-			BlockingQueue<Frame> queue = App.frameQueue(targetFile);
-			Frame f = queue.poll(10, TimeUnit.SECONDS);
-			while (f != null) {
-
-				BufferedImage scaled = Frame.scale(f, width, height);
-				byte[] ident = SubFrameStorage.bytesFromBufferedImage(scaled);
-
-				frames.add(ident);
-				// Next frame
-				f = queue.poll(2, TimeUnit.SECONDS);// TODO UGLY CODE!
-			}
-			Log.info("Done loading " + targetFile);
+			loadFile(targetFile);
 		}
+	}
+	public void loadFile(File targetFile) throws InterruptedException {
+		Log.info("Loading " + targetFile);
+		// Start loading frames
+		BlockingQueue<Frame> queue = App.frameQueue(targetFile);
+		Frame f = queue.poll(10, TimeUnit.SECONDS);
+		while (f != null) {
 
+			BufferedImage scaled = Frame.scale(f, width, height);
+			byte[] ident = SubFrameStorage.bytesFromBufferedImage(scaled);
+
+			frames.add(ident);
+			// Next frame
+			f = queue.poll(2, TimeUnit.SECONDS);// TODO UGLY CODE!
+		}
+		Log.info("Done loading " + targetFile);		
+	}
+	public void dumpFile(File file) throws IOException {
+		FileOutputStream f = new FileOutputStream(file);
+		for(byte[] frame : frames)
+		{
+			f.write(frame);
+		}
+		// TODO Auto-generated method stub
+		throw new RuntimeException("Bram has not implemented this method yet.");
 		
 	}
 
